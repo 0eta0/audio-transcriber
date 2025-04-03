@@ -1,0 +1,415 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		66F71D112D99AF4700451331 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 66F71D102D99AF4700451331 /* WhisperKit */; };
+		66F71D142D99B02200451331 /* InitialSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F71D122D99B02200451331 /* InitialSetupView.swift */; };
+		FCF01A012B8E1E5000F12345 /* AudioTranscriberApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF01A002B8E1E5000F12345 /* AudioTranscriberApp.swift */; };
+		FCF01A032B8E1E5000F12345 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF01A022B8E1E5000F12345 /* ContentView.swift */; };
+		FCF01A052B8E1E5200F12345 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FCF01A042B8E1E5200F12345 /* Assets.xcassets */; };
+		FCF01A082B8E1E5200F12345 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FCF01A072B8E1E5200F12345 /* Preview Assets.xcassets */; };
+		FCF01A102B8E1E7A00F12345 /* TranscriptSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF01A0F2B8E1E7A00F12345 /* TranscriptSegment.swift */; };
+		FCF01A132B8E1E8A00F12345 /* AudioViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF01A122B8E1E8A00F12345 /* AudioViewModel.swift */; };
+		FCF01A162B8E1E9A00F12345 /* WhisperManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF01A152B8E1E9A00F12345 /* WhisperManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		66F71D122D99B02200451331 /* InitialSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialSetupView.swift; sourceTree = "<group>"; };
+		FCF019FD2B8E1E5000F12345 /* AudioTranscriber.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioTranscriber.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FCF01A002B8E1E5000F12345 /* AudioTranscriberApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTranscriberApp.swift; sourceTree = "<group>"; };
+		FCF01A022B8E1E5000F12345 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		FCF01A042B8E1E5200F12345 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FCF01A072B8E1E5200F12345 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		FCF01A092B8E1E5200F12345 /* AudioTranscriber.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AudioTranscriber.entitlements; sourceTree = "<group>"; };
+		FCF01A0F2B8E1E7A00F12345 /* TranscriptSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptSegment.swift; sourceTree = "<group>"; };
+		FCF01A122B8E1E8A00F12345 /* AudioViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioViewModel.swift; sourceTree = "<group>"; };
+		FCF01A152B8E1E9A00F12345 /* WhisperManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperManager.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FCF019FA2B8E1E5000F12345 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66F71D112D99AF4700451331 /* WhisperKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		66F71D132D99B02200451331 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				66F71D122D99B02200451331 /* InitialSetupView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		FCF019F42B8E1E5000F12345 = {
+			isa = PBXGroup;
+			children = (
+				FCF019FF2B8E1E5000F12345 /* AudioTranscriber */,
+				FCF019FE2B8E1E5000F12345 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FCF019FE2B8E1E5000F12345 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FCF019FD2B8E1E5000F12345 /* AudioTranscriber.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FCF019FF2B8E1E5000F12345 /* AudioTranscriber */ = {
+			isa = PBXGroup;
+			children = (
+				66F71D132D99B02200451331 /* Views */,
+				FCF01A142B8E1E9000F12345 /* Services */,
+				FCF01A112B8E1E8000F12345 /* ViewModels */,
+				FCF01A0E2B8E1E7000F12345 /* Models */,
+				FCF01A002B8E1E5000F12345 /* AudioTranscriberApp.swift */,
+				FCF01A022B8E1E5000F12345 /* ContentView.swift */,
+				FCF01A042B8E1E5200F12345 /* Assets.xcassets */,
+				FCF01A092B8E1E5200F12345 /* AudioTranscriber.entitlements */,
+				FCF01A062B8E1E5200F12345 /* Preview Content */,
+			);
+			path = AudioTranscriber;
+			sourceTree = "<group>";
+		};
+		FCF01A062B8E1E5200F12345 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				FCF01A072B8E1E5200F12345 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		FCF01A0E2B8E1E7000F12345 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FCF01A0F2B8E1E7A00F12345 /* TranscriptSegment.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FCF01A112B8E1E8000F12345 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				FCF01A122B8E1E8A00F12345 /* AudioViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		FCF01A142B8E1E9000F12345 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				FCF01A152B8E1E9A00F12345 /* WhisperManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FCF019FC2B8E1E5000F12345 /* AudioTranscriber */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FCF01A0C2B8E1E5200F12345 /* Build configuration list for PBXNativeTarget "AudioTranscriber" */;
+			buildPhases = (
+				FCF019F92B8E1E5000F12345 /* Sources */,
+				FCF019FA2B8E1E5000F12345 /* Frameworks */,
+				FCF019FB2B8E1E5000F12345 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AudioTranscriber;
+			productName = AudioTranscriber;
+			productReference = FCF019FD2B8E1E5000F12345 /* AudioTranscriber.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FCF019F52B8E1E5000F12345 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1340;
+				LastUpgradeCheck = 1340;
+				TargetAttributes = {
+					FCF019FC2B8E1E5000F12345 = {
+						CreatedOnToolsVersion = 13.4;
+					};
+				};
+			};
+			buildConfigurationList = FCF019F82B8E1E5000F12345 /* Build configuration list for PBXProject "AudioTranscriber" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = FCF019F42B8E1E5000F12345;
+			packageReferences = (
+				66F71D0F2D99AF4700451331 /* XCRemoteSwiftPackageReference "WhisperKit" */,
+			);
+			productRefGroup = FCF019FE2B8E1E5000F12345 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FCF019FC2B8E1E5000F12345 /* AudioTranscriber */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FCF019FB2B8E1E5000F12345 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FCF01A082B8E1E5200F12345 /* Preview Assets.xcassets in Resources */,
+				FCF01A052B8E1E5200F12345 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FCF019F92B8E1E5000F12345 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FCF01A032B8E1E5000F12345 /* ContentView.swift in Sources */,
+				66F71D142D99B02200451331 /* InitialSetupView.swift in Sources */,
+				FCF01A162B8E1E9A00F12345 /* WhisperManager.swift in Sources */,
+				FCF01A102B8E1E7A00F12345 /* TranscriptSegment.swift in Sources */,
+				FCF01A132B8E1E8A00F12345 /* AudioViewModel.swift in Sources */,
+				FCF01A012B8E1E5000F12345 /* AudioTranscriberApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		FCF01A0A2B8E1E5200F12345 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		FCF01A0B2B8E1E5200F12345 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		FCF01A0D2B8E1E5200F12345 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AudioTranscriber/AudioTranscriber.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"AudioTranscriber/Preview Content\"";
+				DEVELOPMENT_TEAM = 339P82ZNV5;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "音声の文字起こしのためにマイクへのアクセスが必要です";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.eita.mac.audio-transcriber";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FCF01A0E2B8E1E5200F12345 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AudioTranscriber/AudioTranscriber.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"AudioTranscriber/Preview Content\"";
+				DEVELOPMENT_TEAM = 339P82ZNV5;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "音声の文字起こしのためにマイクへのアクセスが必要です";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.eita.mac.audio-transcriber";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FCF019F82B8E1E5000F12345 /* Build configuration list for PBXProject "AudioTranscriber" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FCF01A0A2B8E1E5200F12345 /* Debug */,
+				FCF01A0B2B8E1E5200F12345 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FCF01A0C2B8E1E5200F12345 /* Build configuration list for PBXNativeTarget "AudioTranscriber" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FCF01A0D2B8E1E5200F12345 /* Debug */,
+				FCF01A0E2B8E1E5200F12345 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		66F71D0F2D99AF4700451331 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		66F71D102D99AF4700451331 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 66F71D0F2D99AF4700451331 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = FCF019F52B8E1E5000F12345 /* Project object */;
+}
