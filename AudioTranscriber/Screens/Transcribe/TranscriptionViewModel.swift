@@ -32,6 +32,7 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     func exportTranscriptionText() -> String
     func formatTimeForExport(_ time: TimeInterval) -> String
     func createDefaultFilename() -> String
+    func resetAll()
 }
 
 final class TranscriptionViewModel: TranscriptionViewModelType {
@@ -84,7 +85,8 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                 // ファイルのセキュリティアクセス処理とコピー
                 let tempURL = try await secureCopyFile(from: url)
                 // ファイルの種類に応じた処理
-                if url.pathExtension.lowercased() == "mp4" {
+                let supports = ["mp4"]
+                if supports.contains(url.pathExtension.lowercased()) {
                     try await loadVideoFile(at: tempURL)
                 } else {
                     try await loadAudioPlayer(with: tempURL)
@@ -266,6 +268,21 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
 
+    // Reset all loaded data and transcription
+    func resetAll() {
+        Task { @MainActor in
+            stopPlayback()
+            resetTranscription()
+            audioFile = nil
+            duration = 0.0
+            currentTime = 0.0
+            playbackProgress = 0.0
+            isFileLoaded = false
+            transcribingProgress = 0
+            audioPlayer = nil
+        }
+    }
+
     // MARK: - Private Functions
 
     // 文字起こしをリセット
@@ -303,13 +320,23 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // セキュリティスコープドリソースへのアクセスと一時ファイルのコピー
     private func secureCopyFile(from url: URL) async throws -> URL {
+        // セキュリティスコープドリソースへのアクセスを開始
+        let accessGranted = url.startAccessingSecurityScopedResource()
+        
+        defer {
+            // 関数が終了するときにアクセス権を解放
+            if accessGranted {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        
         // アクセス権を維持するために一時的なコピーを作成
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let tempURL = documentsDirectory.appendingPathComponent(url.lastPathComponent)
 
         try? FileManager.default.removeItem(at: tempURL)
         try FileManager.default.copyItem(at: url, to: tempURL)
-        
+
         return tempURL
     }
     

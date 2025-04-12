@@ -67,15 +67,16 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
         }
         .fileImporter(
             isPresented: $isFilePickerPresented,
-            allowedContentTypes: [.audio, .mpeg4Movie],
+            allowedContentTypes: [.fileURL, .audio, .mpeg4Movie],
             allowsMultipleSelection: false
         ) { result in
             switch result {
             case .success(let urls):
-                if let url = urls.first {
-                    Task { @MainActor in
-                        await viewModel.loadAudioFile(url: url)
-                    }
+                guard let url = urls.first else {
+                    return
+                }
+                Task { @MainActor in
+                    await viewModel.loadAudioFile(url: url)
                 }
             case .failure(let error):
                 alertMessage = "ファイル選択エラー: \(error.localizedDescription)"
@@ -139,6 +140,7 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
     @Binding var showingAlert: Bool
     @Binding var alertMessage: String
     @State private var showingSavePanel = false
+    @State private var showingResetConfirmation = false
 
     // MARK: Initializer
 
@@ -186,10 +188,21 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
             }
             
             Button(action: {
-                isFilePickerPresented = true
+                showingResetConfirmation = true
             }) {
-                Label("音声ファイルを開く", systemImage: "doc")
+                Label("リセット", systemImage: "arrow.counterclockwise")
             }
+            .confirmationDialog(
+                "ファイルと文字起こしをリセットしますか？",
+                isPresented: $showingResetConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("リセット", role: .destructive) {
+                    viewModel.resetAll()
+                }
+                Button("キャンセル", role: .cancel) {}
+            }
+            .keyboardShortcut("r", modifiers: [.command, .shift])
         }
         .padding(.vertical, 16)
         .padding(.horizontal, 24)
@@ -419,8 +432,10 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
 
-    @ObservedObject private var viewModel: ViewModel
     @Binding var autoScrollEnabled: Bool
+
+    @ObservedObject private var viewModel: ViewModel
+    @State private var previousOffset: CGFloat = 0
 
     // MARK: Initializer
 
@@ -454,7 +469,12 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
             })
         }
         .onPreferenceChange(OffsetPreferenceKey.self) { offset in
-            autoScrollEnabled = false
+            let delta = offset - previousOffset
+            previousOffset = offset
+            print(abs(delta) / 100)
+            if (abs(delta) / 100) > 1 {
+                autoScrollEnabled = false
+            }
         }
     }
 }
@@ -484,7 +504,7 @@ struct DragOverlayView: View {
                 VStack {
                     Image(systemName: "arrow.down.doc.fill")
                         .font(.largeTitle)
-                    Text("ここに音声ファイルをドロップ")
+                    Text("ここに音声、動画ファイルをドロップ")
                         .font(.headline)
                 }
                 .foregroundColor(.accentColor)
@@ -509,9 +529,6 @@ struct TranscriptSegmentView: View {
             Text(formatTime(segment.startTime))
                 .frame(width: 80, alignment: .leading)
                 .multilineTextAlignment(.leading)
-                .foregroundColor(isActive ? .primary : .secondary)
-
-            Text("-")
                 .foregroundColor(isActive ? .primary : .secondary)
 
             Text(segment.text)
@@ -556,7 +573,7 @@ struct FileLoadingPromptView: View {
                         .font(.system(size: 60))
                         .foregroundColor(.accentColor)
                     
-                    Text("音声ファイルをドラッグ＆ドロップ")
+                    Text("音声、動画ファイルをドラッグ＆ドロップ")
                         .font(.title2)
                         .fontWeight(.medium)
                     
@@ -566,17 +583,12 @@ struct FileLoadingPromptView: View {
                     Button(action: {
                         isFilePickerPresented = true
                     }) {
-                        Label("ファイルを選択", systemImage: "folder")
+                        Label("音声、動画ファイルを選択", systemImage: "folder")
                             .padding()
                             .frame(minWidth: 200)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    
-                    Text("サポート形式: MP3, WAV, M4A, MP4")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 10)
                 }
                 .padding(40)
                 .background(
