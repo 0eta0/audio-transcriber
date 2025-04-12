@@ -1,10 +1,16 @@
 import SwiftUI
 
-struct InitialSetupView: View {
-    @ObservedObject var setupViewModel = SetupViewModel()
-    @Binding var isSetupCompleted: Bool
+struct SetupView<ViewModel: SetupViewModelType>: View {
+
+    // MARK: Properties
+
     @Environment(\.presentationMode) var presentationMode
-    
+
+    @StateObject var viewModel: ViewModel
+    @Binding var isSetupCompleted: Bool
+
+    // MARK: Lifecycle
+
     var body: some View {
         VStack(spacing: 20) {
             HStack {
@@ -34,20 +40,20 @@ struct InitialSetupView: View {
                 .padding(.vertical, 5)
             
             VStack(spacing: 20) {
-                if setupViewModel.isDownloading {
-                    ProgressView(value: setupViewModel.downloadProgress, total: 1.0)
+                if viewModel.isDownloading {
+                    ProgressView(value: viewModel.downloadProgress, total: 1.0)
                         .progressViewStyle(LinearProgressViewStyle())
                         .frame(height: 10)
                         .padding(.horizontal)
                     
-                    Text("\(Int(setupViewModel.downloadProgress * 100))%")
+                    Text("\(Int(viewModel.downloadProgress * 100))%")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Text(setupViewModel.statusMessage)
+                    Text(viewModel.statusMessage)
                         .multilineTextAlignment(.center)
                         .padding()
-                } else if setupViewModel.isError {
+                } else if viewModel.isError {
                     Image(systemName: "exclamationmark.triangle")
                         .resizable()
                         .frame(width: 50, height: 50)
@@ -58,24 +64,24 @@ struct InitialSetupView: View {
                         .foregroundColor(.red)
                         .font(.headline)
                     
-                    Text(setupViewModel.statusMessage)
+                    Text(viewModel.statusMessage)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                     
                     VStack(spacing: 10) {
                         Button("再試行") {
-                            setupViewModel.downloadModel()
+                            viewModel.downloadModel()
                         }
                         .buttonStyle(.borderedProminent)
                         .padding(.top)
                         
                         Button("既存のモデルをクリーンアップして再ダウンロード") {
-                            setupViewModel.resetAndRedownloadModel()
+                            viewModel.resetAndRedownloadModel()
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
                     }
-                } else if !setupViewModel.hasStarted {
+                } else if !viewModel.hasStarted {
                     Image(systemName: "arrow.down.circle")
                         .resizable()
                         .frame(width: 60, height: 60)
@@ -91,7 +97,7 @@ struct InitialSetupView: View {
                         .padding(.top, 5)
                     
                     Button("モデルをダウンロード") {
-                        setupViewModel.downloadModel()
+                        viewModel.downloadModel()
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
@@ -133,90 +139,5 @@ struct InitialSetupView: View {
         }
         .padding(.horizontal)
         .frame(width: 550)
-        .onAppear {
-            setupViewModel.setupNotifications()
-        }
-        .onDisappear {
-            setupViewModel.cleanupNotifications()
-        }
-    }
-}
-
-class SetupViewModel: ObservableObject {
-    @Published var isDownloading = false
-    @Published var isError = false
-    @Published var hasStarted = false
-    @Published var statusMessage = "モデルをダウンロードしています..."
-    @Published var downloadProgress: Float = 0.0
-    @Published var errorDetails: String?
-    
-    private let whisperManager = WhisperManager()
-    private var notificationObservers: [NSObjectProtocol] = []
-    
-    deinit {
-        cleanupNotifications()
-    }
-    
-    func setupNotifications() {
-        // モデルのダウンロード進捗を監視
-        let progressObserver = NotificationCenter.default.addObserver(
-            forName: NSNotification.Name("WhisperModelDownloadProgress"),
-            object: nil,
-            queue: .main) { [weak self] notification in
-                if let progress = notification.userInfo?["progress"] as? Float {
-                    self?.downloadProgress = progress
-                }
-            }
-        
-        // モデルのダウンロード失敗を監視
-        let failureObserver = NotificationCenter.default.addObserver(
-            forName: NSNotification.Name("WhisperModelDownloadFailed"),
-            object: nil,
-            queue: .main) { [weak self] notification in
-                self?.isDownloading = false
-                self?.isError = true
-                if let error = notification.userInfo?["error"] as? String {
-                    self?.statusMessage = "エラー: \(error)"
-                    self?.errorDetails = error
-                } else {
-                    self?.statusMessage = "モデルのダウンロードに失敗しました。\nネットワーク接続を確認してください。"
-                }
-            }
-        
-        // モデルのダウンロード成功を監視
-        let successObserver = NotificationCenter.default.addObserver(
-            forName: NSNotification.Name("WhisperModelLoaded"),
-            object: nil,
-            queue: .main) { [weak self] _ in
-                self?.isDownloading = false
-                self?.isError = false
-                self?.hasStarted = true
-                self?.statusMessage = "モデルのダウンロードに成功しました！"
-            }
-        
-        notificationObservers.append(contentsOf: [progressObserver, failureObserver, successObserver])
-    }
-    
-    func cleanupNotifications() {
-        for observer in notificationObservers {
-            NotificationCenter.default.removeObserver(observer)
-        }
-        notificationObservers.removeAll()
-    }
-    
-    func downloadModel() {
-        isDownloading = true
-        hasStarted = true
-        isError = false
-        downloadProgress = 0.0
-        statusMessage = "Whisperモデルをダウンロードしています...\nこれには数分かかる場合があります"
-    }
-    
-    func resetAndRedownloadModel() {
-        isDownloading = true
-        hasStarted = true
-        isError = false
-        downloadProgress = 0.0
-        statusMessage = "モデルファイルをリセットし、再ダウンロードしています...\nこれには数分かかる場合があります"
     }
 }

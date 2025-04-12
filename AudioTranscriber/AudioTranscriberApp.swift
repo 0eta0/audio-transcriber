@@ -2,16 +2,18 @@ import SwiftUI
 
 @main
 struct AudioTranscriberApp: App {
-    @AppStorage("isSetupCompleted") private var isSetupCompleted = false
-    
+
+    // MARK: Properties
+
+    private var dependency = Dependency()
+
+    // MARK: Body
+
     var body: some Scene {
         WindowGroup {
-            if isSetupCompleted {
-                ContentView()
-                    .frame(minWidth: 800, minHeight: 600)
-            } else {
-                InitialSetupView(isSetupCompleted: $isSetupCompleted)
-            }
+            TranscriptionView()
+                .frame(minWidth: 800, minHeight: 600)
+                .environment(\.dependency, dependency)
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
