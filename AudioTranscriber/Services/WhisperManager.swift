@@ -97,12 +97,22 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
             for segment in result.segments {
                 let cleanedText = removeTagsFromText(segment.text)
-                let transcriptSegment = TranscriptSegment(
+                if let last = segments.last, last.text == cleanedText {
+                    let ts = TranscriptSegment(
+                        text: cleanedText.trimmingCharacters(in: .whitespacesAndNewlines),
+                        startTime: last.startTime,
+                        endTime: TimeInterval(segment.end)
+                    )
+                    _ = segments.popLast()
+                    segments.append(ts)
+                    continue
+                }
+                let ts = TranscriptSegment(
                     text: cleanedText.trimmingCharacters(in: .whitespacesAndNewlines),
                     startTime: TimeInterval(segment.start),
                     endTime: TimeInterval(segment.end)
                 )
-                segments.append(transcriptSegment)
+                segments.append(ts)
             }
             return segments
         } catch {

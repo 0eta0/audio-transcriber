@@ -89,14 +89,12 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
         for provider in providers {
             // 利用可能なタイプ識別子を確認
             let availableTypes = provider.registeredTypeIdentifiers
-            
             // 使える識別子を探す
             let identifierToUse = availableTypes.first(where: { ident in
                 return ident == "public.file-url" || 
                        ident == UTType.fileURL.identifier || 
                        ident == "public.url"
             }) ?? availableTypes.first
-            
             if let identifierToUse = identifierToUse {
                 provider.loadItem(forTypeIdentifier: identifierToUse) { item, error in
                     if let error = error {
@@ -365,17 +363,23 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
 
-    var viewModel: ViewModel
+    @ObservedObject private var viewModel: ViewModel
+
+    // MARK: Initializer
+
+    init(viewModel: ViewModel) {
+        self.viewModel = viewModel
+    }
 
     // MARK: Lifecycle
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(viewModel.transcribedSegments) { segment in
                     TranscriptSegmentView(
                         segment: segment,
-                        isActive: viewModel.currentSegmentID == segment.id
+                        isActive: $viewModel.currentSegmentID.wrappedValue == segment.id
                     )
                     .id(segment.id)
                     .onTapGesture {
@@ -422,16 +426,34 @@ struct TranscriptSegmentView: View {
     // MARK: Lifecycle
     
     var body: some View {
-        Text(segment.text)
-            .padding(.vertical, 6)
-            .padding(.horizontal, 10)
-            .background(isActive ? Color.accentColor.opacity(0.2) : Color.clear)
-            .cornerRadius(6)
-            .foregroundColor(isActive ? .primary : .secondary)
-            .font(.body)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .padding(.vertical, 2)
+        HStack(alignment: .top, spacing: 4) {
+            Text(formatTime(segment.startTime))
+                .frame(width: 80, alignment: .leading)
+                .multilineTextAlignment(.leading)
+                .foregroundColor(isActive ? .primary : .secondary)
+
+            Text("-")
+                .foregroundColor(isActive ? .primary : .secondary)
+
+            Text(segment.text)
+                .foregroundColor(isActive ? .primary : .secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 10)
+        .background(isActive ? Color.accentColor.opacity(0.2) : Color.clear)
+        .cornerRadius(6)
+        .font(.body)
+        .contentShape(Rectangle())
+        .padding(.vertical, 2)
+    }
+
+    // MARK: Private Functions
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d分%02d秒", minutes, seconds)
     }
 }
 

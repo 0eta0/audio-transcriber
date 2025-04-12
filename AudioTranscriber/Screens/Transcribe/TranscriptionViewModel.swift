@@ -2,7 +2,7 @@ import Foundation
 import AVFoundation
 import Combine
 
-protocol TranscriptionViewModelType: ObservableObject {
+protocol TranscriptionViewModelType: ObservableObject, Sendable {
 
     var audioFile: URL? { get set }
     var duration: TimeInterval { get set }
@@ -122,6 +122,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             // タイマーで現在の再生位置を更新
             timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
                 guard let player = self?.audioPlayer else { return }
+
                 self?.updateCurrentTime(player.currentTime)
             }
         }
@@ -217,6 +218,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         guard let player = audioPlayer else { return }
 
         Task { @MainActor [self] in
+            currentSegmentID = segment.id
             // セグメントの開始時間にシーク
             player.currentTime = segment.startTime
             updateCurrentTime(segment.startTime)
@@ -281,7 +283,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                 return
             }
         }
-        currentSegmentID = UUID()
     }
 
     // 時間のフォーマット
