@@ -13,6 +13,7 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
 
     var transcribedSegments: [TranscriptSegment] { get set }
     var isTranscribing: Bool { get set }
+    var transcribingProgress: TimeInterval { get set }
     var currentSegmentID: UUID { get set }
     var error: WhisperError? { get set }
 
@@ -48,6 +49,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     // 文字起こし関連
     @Published var transcribedSegments: [TranscriptSegment] = []
     @Published var isTranscribing: Bool = false
+    @Published var transcribingProgress: TimeInterval = .zero
     @Published var currentSegmentID: UUID = UUID()
     @Published var error: WhisperError?
 
@@ -182,7 +184,13 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         Task { @MainActor [self] in
             isTranscribing = true
             do {
-                if let result = try await self.whisperManager?.transcribe(url: audioFileURL) {
+                let result = try await self.whisperManager?.transcribe(url: audioFileURL) { [weak self] progress in
+                    guard let self = self else { return }
+                    Task { @MainActor in
+                        self.transcribingProgress = progress
+                    }
+                }
+                if let result = result {
                     transcribedSegments = result
                 }
             } catch let e as WhisperError {

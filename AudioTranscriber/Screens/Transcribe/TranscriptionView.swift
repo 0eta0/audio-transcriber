@@ -286,6 +286,7 @@ struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
     // MARK: Properties
 
     @ObservedObject private var viewModel: ViewModel
+    @State private var autoScrollEnabled = true
 
     // MARK: Initializer
 
@@ -297,20 +298,44 @@ struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
     
     var body: some View {
         ScrollViewReader { scrollView in
-            VStack {
-                if viewModel.transcribedSegments.isEmpty {
-                    EmptyTranscriptionView(viewModel: viewModel)
-                } else {
-                    TranscriptionListView(viewModel: viewModel)
+            ZStack(alignment: .bottomTrailing) {
+                VStack {
+                    if viewModel.transcribedSegments.isEmpty {
+                        EmptyTranscriptionView(viewModel: viewModel)
+                    } else {
+                        TranscriptionListView(
+                            viewModel: viewModel,
+                            autoScrollEnabled: $autoScrollEnabled
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(NSColor.textBackgroundColor))
+
+                if !autoScrollEnabled && !viewModel.transcribedSegments.isEmpty {
+                    Button(action: {
+                        autoScrollEnabled = true
+                        withAnimation {
+                            scrollView.scrollTo(viewModel.currentSegmentID, anchor: .center)
+                        }
+                    }) {
+                        Label("現在の場所を表示", systemImage: "text.insert")
+                            .padding(8)
+                            .background(Color(NSColor.controlBackgroundColor))
+                            .cornerRadius(8)
+                            .shadow(radius: 2)
+                    }
+                    .buttonStyle(.borderless)
+                    .padding(16)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(NSColor.textBackgroundColor))
-            .onChange(of: viewModel.currentSegmentID, { _, id in
-                withAnimation {
-                    scrollView.scrollTo(id, anchor: .center)
+            .onChange(of: viewModel.currentSegmentID) { _, id in
+                if autoScrollEnabled {
+                    withAnimation {
+                        scrollView.scrollTo(id, anchor: .center)
+                    }
                 }
-            })
+            }
         }
     }
 }
@@ -338,6 +363,30 @@ struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                         .scaleEffect(1.2)
                     Text("文字起こしを処理中...")
                         .padding(.top)
+                    
+                    // Progress bar to show transcription progress
+                    VStack(alignment: .center, spacing: 8) {
+                        HStack {
+                            Text("\(Int(viewModel.transcribingProgress * 100))%")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(formatTime(viewModel.transcribingProgress * viewModel.duration))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("/")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(formatTime(viewModel.duration))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        ProgressView(value: viewModel.transcribingProgress, total: 1.0)
+                            .progressViewStyle(.linear)
+                            .frame(width: 300)
+                    }
+                    .padding(.top, 20)
+                    .padding(.horizontal, 20)
                 }
             } else {
                 Text("文字起こしがありません")
@@ -356,6 +405,13 @@ struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+    
+    // Time format function for progress display
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
 }
 
 // 文字起こしリスト表示
@@ -364,11 +420,13 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
     // MARK: Properties
 
     @ObservedObject private var viewModel: ViewModel
+    @Binding var autoScrollEnabled: Bool
 
     // MARK: Initializer
 
-    init(viewModel: ViewModel) {
+    init(viewModel: ViewModel, autoScrollEnabled: Binding<Bool>) {
         self.viewModel = viewModel
+        self._autoScrollEnabled = autoScrollEnabled
     }
 
     // MARK: Lifecycle
@@ -388,7 +446,28 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
                 }
             }
             .padding()
+            .background(GeometryReader {
+                Color.clear.preference(
+                    key: OffsetPreferenceKey.self,
+                    value: $0.frame(in: .global).origin.y
+                )
+            })
         }
+        .onPreferenceChange(OffsetPreferenceKey.self) { offset in
+            autoScrollEnabled = false
+        }
+    }
+}
+
+
+struct OffsetPreferenceKey: PreferenceKey {
+
+    typealias Value = CGFloat
+
+    static var defaultValue = CGFloat.zero
+
+    static func reduce(value: inout Value, nextValue: () -> Value) {
+        value += nextValue()
     }
 }
 

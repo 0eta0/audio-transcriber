@@ -7,7 +7,7 @@ protocol WhisperManagerType {
 
     func setupWhisperIfNeeded(modelName: String) async throws
     func supportedModel() -> [String]
-    func transcribe(url: URL) async throws -> [TranscriptSegment]
+    func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment]
 }
 
 // Making WhisperManager sendable by adding @unchecked Sendable conformance
@@ -36,7 +36,6 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             model: modelName,
             modelRepo: modelRepo,
             verbose: true,
-            logLevel: .debug,
             download: true
         )
         do {
@@ -56,7 +55,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
     }
 
     // 音声ファイルを文字起こしする
-    func transcribe(url: URL) async throws -> [TranscriptSegment] {
+    func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment] {
         try await setupWhisperIfNeeded()
         // ファイル形式を確認
         let fileExtension = url.pathExtension.lowercased()
@@ -68,14 +67,38 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         guard let whisperKit = whisperKit else {
             throw WhisperError.uninitialized
         }
+        // オーディオファイルの長さを取得
+        let audioDuration = try await getAudioDuration(for: url)
         // 文字起こし処理を実行
-        return try await transcribeAudio(whisperKit: whisperKit, url: url)
+        return try await transcribeAudio(
+            whisperKit: whisperKit,
+            url: url,
+            audioDuration: audioDuration,
+            progressCallback: progressCallback
+        )
     }
 
     // MARK: Private Functions
+    
+    // オーディオファイルの長さを取得
+    private func getAudioDuration(for url: URL) async throws -> TimeInterval {
+        if url.pathExtension.lowercased() == "mp4" {
+            let asset = AVAsset(url: url)
+            return try await TimeInterval(CMTimeGetSeconds(asset.load(.duration)))
+        } else {
+            // 通常の音声ファイル
+            let audioPlayer = try AVAudioPlayer(contentsOf: url)
+            return audioPlayer.duration
+        }
+    }
 
     // 文字起こしを実行（WhisperKitを使用）
-    private func transcribeAudio(whisperKit: WhisperKit, url: URL) async throws -> [TranscriptSegment]{
+    private func transcribeAudio(
+        whisperKit: WhisperKit,
+        url: URL,
+        audioDuration: TimeInterval,
+        progressCallback: @escaping (TimeInterval) -> Void
+    ) async throws -> [TranscriptSegment]{
         // 音声ファイルをロード
         do {
             // 文字起こし設定
@@ -87,8 +110,12 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             // 文字起こしを実行 - audioPathを使用
             let results = try await whisperKit.transcribe(
                 audioPath: url.path,
-                decodeOptions: decodeOptions
-            )
+                decodeOptions: decodeOptions,
+                callback: { _ in
+                    let progress = whisperKit.progress.fractionCompleted
+                    progressCallback(progress)
+                    return true
+            })
             // WhisperKitの結果からTranscriptSegmentを生成
             var segments: [TranscriptSegment] = []
             guard let result = results.first else {
