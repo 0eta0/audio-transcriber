@@ -10,6 +10,7 @@
 		66827F6B2DAAA72400F77592 /* Dependency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66827F6A2DAAA72400F77592 /* Dependency.swift */; };
 		6682801C2DAABDA800F77592 /* EnvironmentValues+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */; };
 		6682801D2DAABDA800F77592 /* Color+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668280192DAABDA800F77592 /* Color+.swift */; };
+		6682801F2DAAD1E500F77592 /* TranscriptionTextDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6682801E2DAAD1E500F77592 /* TranscriptionTextDocument.swift */; };
 		66E6B0F92DAA9EC90090E104 /* WhisperError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E6B0F82DAA9EC40090E104 /* WhisperError.swift */; };
 		66E6B0FB2DAA9F100090E104 /* SetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E6B0FA2DAA9F0B0090E104 /* SetupViewModel.swift */; };
 		66F71D112D99AF4700451331 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 66F71D102D99AF4700451331 /* WhisperKit */; };
@@ -26,6 +27,7 @@
 		66827F6A2DAAA72400F77592 /* Dependency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependency.swift; sourceTree = "<group>"; };
 		668280192DAABDA800F77592 /* Color+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+.swift"; sourceTree = "<group>"; };
 		6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EnvironmentValues+.swift"; sourceTree = "<group>"; };
+		6682801E2DAAD1E500F77592 /* TranscriptionTextDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionTextDocument.swift; sourceTree = "<group>"; };
 		66E6B0F82DAA9EC40090E104 /* WhisperError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperError.swift; sourceTree = "<group>"; };
 		66E6B0FA2DAA9F0B0090E104 /* SetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupViewModel.swift; sourceTree = "<group>"; };
 		66F71D122D99B02200451331 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
@@ -111,6 +113,7 @@
 		FCF01A0E2B8E1E7000F12345 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				6682801E2DAAD1E500F77592 /* TranscriptionTextDocument.swift */,
 				66E6B0F82DAA9EC40090E104 /* WhisperError.swift */,
 				FCF01A0F2B8E1E7A00F12345 /* TranscriptSegment.swift */,
 			);
@@ -209,6 +212,7 @@
 			files = (
 				FCF01A032B8E1E5000F12345 /* TranscriptionView.swift in Sources */,
 				66F71D142D99B02200451331 /* SetupView.swift in Sources */,
+				6682801F2DAAD1E500F77592 /* TranscriptionTextDocument.swift in Sources */,
 				FCF01A162B8E1E9A00F12345 /* WhisperManager.swift in Sources */,
 				66827F6B2DAAA72400F77592 /* Dependency.swift in Sources */,
 				66E6B0F92DAA9EC90090E104 /* WhisperError.swift in Sources */,

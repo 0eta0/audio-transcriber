@@ -26,6 +26,11 @@ protocol TranscriptionViewModelType: ObservableObject {
     func transcribeAudio()
     func saveTranscription(to url: URL)
     func playFromSegment(_ segment: TranscriptSegment)
+    
+    // Added new methods
+    func exportTranscriptionText() -> String
+    func formatTimeForExport(_ time: TimeInterval) -> String
+    func createDefaultFilename() -> String
 }
 
 final class TranscriptionViewModel: TranscriptionViewModelType {
@@ -217,6 +222,37 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             updateCurrentTime(segment.startTime)
             // 再生開始
             startPlayback()
+        }
+    }
+    
+    // Export transcription text
+    func exportTranscriptionText() -> String {
+        transcribedSegments
+            .map { segment in
+                let timeString = formatTimeForExport(segment.startTime)
+                return "[\(timeString)] \(segment.text)"
+            }
+            .joined(separator: "\n\n")
+    }
+
+    // Format time for export
+    func formatTimeForExport(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        let milliseconds = Int((time.truncatingRemainder(dividingBy: 1)) * 1000)
+        return String(format: "%02d:%02d.%03d", minutes, seconds, milliseconds)
+    }
+
+    // Create default filename
+    func createDefaultFilename() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd-HHmm"
+        let dateString = dateFormatter.string(from: Date())
+        
+        if let fileName = audioFile?.lastPathComponent.components(separatedBy: ".").first {
+            return "\(fileName)_文字起こし_\(dateString).txt"
+        } else {
+            return "文字起こし_\(dateString).txt"
         }
     }
 

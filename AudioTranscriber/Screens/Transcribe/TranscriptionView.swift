@@ -140,6 +140,7 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
     @Binding var isFilePickerPresented: Bool
     @Binding var showingAlert: Bool
     @Binding var alertMessage: String
+    @State private var showingSavePanel = false
 
     // MARK: Initializer
 
@@ -161,27 +162,35 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
                 .font(.headline)
                 .lineLimit(1)
             Spacer()
+            
+            if !viewModel.transcribedSegments.isEmpty {
+                Button(action: {
+                    showingSavePanel = true
+                }) {
+                    Label("テキストファイルとして保存", systemImage: "arrow.down.doc")
+                }
+                .buttonStyle(.borderedProminent)
+                .fileExporter(
+                    isPresented: $showingSavePanel,
+                    document: TranscriptionTextDocument(content: viewModel.exportTranscriptionText()),
+                    contentType: .plainText,
+                    defaultFilename: viewModel.createDefaultFilename()
+                ) { result in
+                    switch result {
+                    case .success:
+                        alertMessage = "ファイルの保存に成功しました"
+                        showingAlert = true
+                    case .failure(let error):
+                        alertMessage = "ファイルの保存に失敗しました: \(error.localizedDescription)"
+                        showingAlert = true
+                    }
+                }
+            }
+            
             Button(action: {
                 isFilePickerPresented = true
             }) {
                 Label("音声ファイルを開く", systemImage: "doc")
-            }
-            .fileImporter(
-                isPresented: $isFilePickerPresented,
-                allowedContentTypes: [.audio, .mpeg4Movie],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    if let url = urls.first {
-                        Task { @MainActor in
-                            await viewModel.loadAudioFile(url: url)
-                        }
-                    }
-                case .failure(let error):
-                    alertMessage = "ファイル選択エラー: \(error.localizedDescription)"
-                    showingAlert = true
-                }
             }
         }
         .padding(.vertical, 16)
