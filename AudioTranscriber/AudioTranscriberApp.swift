@@ -11,7 +11,7 @@ struct AudioTranscriberApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TranscriptionView()
+            TranscriptionView(viewModel: TranscriptionViewModel(whisperManager: dependency.whisperManager))
                 .frame(minWidth: 800, minHeight: 600)
                 .environment(\.dependency, dependency)
         }

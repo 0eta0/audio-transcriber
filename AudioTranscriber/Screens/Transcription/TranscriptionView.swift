@@ -17,7 +17,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Initializer
 
-    init(viewModel: ViewModel = TranscriptionViewModel()) {
+    init(viewModel: ViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
 
@@ -102,8 +102,8 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
             }) ?? availableTypes.first
             if let identifierToUse = identifierToUse {
                 provider.loadItem(forTypeIdentifier: identifierToUse) { item, error in
-                    if let error = error { return }
-                    
+                    if error != nil { return }
+
                     var fileURL: URL? = nil
                     // 様々なデータ形式に対応
                     if let url = item as? URL {

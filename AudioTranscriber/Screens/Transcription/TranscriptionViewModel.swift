@@ -64,7 +64,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     // 音声処理関連
     private var audioPlayer: AVAudioPlayer?
     private var timer: Timer?
-    private var whisperManager: WhisperManager?
+    private var whisperManager: WhisperManagerType?
     private var cancellables = Set<AnyCancellable>()
     
     // Model related properties
@@ -78,11 +78,15 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // MARK: - Initializer
 
-    init() {
-        whisperManager = WhisperManager()
+    init(whisperManager: any WhisperManagerType) {
+        self.whisperManager = whisperManager
+
         Task {
             do {
-                try await whisperManager?.setupWhisperIfNeeded(modelName: "base")
+                try await whisperManager.setupWhisperIfNeeded(
+                    modelName: whisperManager.currentModel(),
+                    progressCallback: nil
+                )
             } catch {
                 print(error.localizedDescription)
             }
