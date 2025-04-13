@@ -35,6 +35,7 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     func resetAll()
     func autoScrollEnabled(with duration: TimeInterval?)
     func autoScrollDisabled()
+    func handleDrop(providers: [NSItemProvider]) -> Bool
 }
 
 final class TranscriptionViewModel: TranscriptionViewModelType {
@@ -318,7 +319,49 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
         autoScrollEnabled = false
     }
+    
+    // ドラッグ＆ドロップの処理
+    func handleDrop(providers: [NSItemProvider]) -> Bool {
+        for provider in providers {
+            // 利用可能なタイプ識別子を確認
+            let availableTypes = provider.registeredTypeIdentifiers
+            // 使える識別子を探す
+            let identifierToUse = availableTypes.first(where: { ident in
+                return ident == "public.file-url" || 
+                       ident == UTType.fileURL.identifier || 
+                       ident == "public.url"
+            }) ?? availableTypes.first
+            
+            if let identifierToUse = identifierToUse {
+                provider.loadItem(forTypeIdentifier: identifierToUse) { item, error in
+                    if error != nil { return }
 
+                    var fileURL: URL? = nil
+                    // 様々なデータ形式に対応
+                    if let url = item as? URL {
+                        fileURL = url
+                    } else if let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil) {
+                        fileURL = url
+                    } else if let string = item as? String, let url = URL(string: string) {
+                        fileURL = url
+                    }
+                    // ファイルURLが取得できたら処理
+                    if let url = fileURL {
+                        // オーディオファイルかチェック
+                        let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
+                        if supportedFormats.contains(url.pathExtension.lowercased()) {
+                            Task { @MainActor in
+                                await self.loadAudioFile(url: url)
+                            }
+                        }
+                    }
+                }
+                // 最初に成功した項目だけを処理
+                return true
+            }
+        }
+        return false
+    }
 
     // MARK: - Private Functions
 
