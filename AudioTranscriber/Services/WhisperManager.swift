@@ -78,7 +78,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         try await setupWhisperIfNeeded(modelName: currentModelName)
         // ファイル形式を確認
         let fileExtension = url.pathExtension.lowercased()
-        let supportedFormats = ["wav", "mp3", "m4a", "flac", "mp4"]
+        let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
         guard supportedFormats.contains(fileExtension) else {
             throw WhisperError.unsupportedFormat
         }
@@ -101,14 +101,9 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
     
     // オーディオファイルの長さを取得
     private func getAudioDuration(for url: URL) async throws -> TimeInterval {
-        if url.pathExtension.lowercased() == "mp4" {
-            let asset = AVAsset(url: url)
-            return try await TimeInterval(CMTimeGetSeconds(asset.load(.duration)))
-        } else {
-            // 通常の音声ファイル
-            let audioPlayer = try AVAudioPlayer(contentsOf: url)
-            return audioPlayer.duration
-        }
+        // 通常の音声ファイル
+        let audioPlayer = try AVAudioPlayer(contentsOf: url)
+        return audioPlayer.duration
     }
 
     // 文字起こしを実行（WhisperKitを使用）

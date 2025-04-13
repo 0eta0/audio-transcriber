@@ -59,7 +59,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
             .alert(alertMessage, isPresented: $showingAlert) {
                 Button("OK", role: .cancel) {}
             }
-            .onDrop(of: [.fileURL, .audio, .mpeg4Movie], isTargeted: $isDraggingOver) { providers in
+            .onDrop(of: [.audio], isTargeted: $isDraggingOver) { providers in
                 handleDrop(providers: providers)
             }
             .sheet(isPresented: $showSetupModal) {
@@ -68,7 +68,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
             }
             .fileImporter(
                 isPresented: $isFilePickerPresented,
-                allowedContentTypes: [.fileURL, .audio, .mpeg4Movie],
+                allowedContentTypes: [.audio],
                 allowsMultipleSelection: false
             ) { result in
                 switch result {
@@ -102,10 +102,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
             }) ?? availableTypes.first
             if let identifierToUse = identifierToUse {
                 provider.loadItem(forTypeIdentifier: identifierToUse) { item, error in
-                    if let error = error {
-                        print("項目読み込みエラー: \(error.localizedDescription)")
-                        return
-                    }
+                    if let error = error { return }
                     
                     var fileURL: URL? = nil
                     // 様々なデータ形式に対応
@@ -118,8 +115,12 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                     }
                     // ファイルURLが取得できたら処理
                     if let url = fileURL {
-                        Task { @MainActor in
-                            await viewModel.loadAudioFile(url: url)
+                        // オーディオファイルかチェック
+                        let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
+                        if supportedFormats.contains(url.pathExtension.lowercased()) {
+                            Task { @MainActor in
+                                await viewModel.loadAudioFile(url: url)
+                            }
                         }
                     }
                 }
@@ -530,9 +531,9 @@ struct DragOverlayView: View {
             .background(Color.accentColor.opacity(0.1))
             .overlay(
                 VStack {
-                    Image(systemName: "arrow.down.doc.fill")
+                    Image(systemName: "waveform")
                         .font(.largeTitle)
-                    Text("ここに音声、動画ファイルをドロップ")
+                    Text("ここに音声ファイルをドロップ")
                         .font(.headline)
                 }
                 .foregroundColor(.accentColor)
@@ -616,7 +617,7 @@ struct FileLoadingPromptView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.accentColor)
 
-            Text("音声、動画ファイルをドラッグ＆ドロップ")
+            Text("音声ファイルをドラッグ＆ドロップ")
                 .font(.title2)
                 .fontWeight(.medium)
 
@@ -626,7 +627,7 @@ struct FileLoadingPromptView: View {
             Button(action: {
                 isFilePickerPresented = true
             }) {
-                Label("音声、動画ファイルを選択", systemImage: "folder")
+                Label("音声ファイルを選択", systemImage: "folder")
                     .padding()
                     .frame(minWidth: 200)
             }

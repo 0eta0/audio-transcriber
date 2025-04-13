@@ -100,15 +100,15 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             do {
                 // ファイルのセキュリティアクセス処理とコピー
                 let tempURL = try await secureCopyFile(from: url)
-                // ファイルの種類に応じた処理
-                let supports = ["mp4"]
-                if supports.contains(url.pathExtension.lowercased()) {
-                    try await loadVideoFile(at: tempURL)
-                } else {
-                    try await loadAudioPlayer(with: tempURL)
+                // サポートされているオーディオファイル形式かチェック
+                let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
+                if !supportedFormats.contains(url.pathExtension.lowercased()) {
+                    throw WhisperError.unsupportedFormat
                 }
+                
+                // オーディオプレーヤーの読み込み
+                try await loadAudioPlayer(with: tempURL)
             } catch let error as WhisperError {
-                print("音声ファイル読み込みエラー: \(error.localizedDescription)")
                 Task { @MainActor in
                     self.error = error
                 }
@@ -211,7 +211,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                     transcribedSegments = result
                 }
             } catch let e as WhisperError {
-                print("文字起こしエラー: \(e.localizedDescription)")
                 self.error = error
             } catch {
                 self.error = WhisperError.transcriptionFailed
@@ -374,35 +373,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         return tempURL
     }
     
-    // ビデオファイルから音声トラックを読み込む
-    private func loadVideoFile(at url: URL) async throws {
-        let asset = AVAsset(url: url)
-        let audioTracks = try await asset.loadTracks(withMediaType: .audio)
-
-        guard !audioTracks.isEmpty else {
-            throw WhisperError.fileNotFound
-        }
-        
-        // AVPlayerを使用して音声を再生（MP4対応）
-        let playerItem = AVPlayerItem(url: url)
-        let player = AVPlayer(playerItem: playerItem)
-        
-        // 音声の長さを取得
-        guard let playerItem = player.currentItem else {
-            throw WhisperError.audioFileLoadFailed
-        }
-        
-        let duration = try await playerItem.asset.load(.duration)
-        let seconds = CMTimeGetSeconds(duration)
-        
-        Task { @MainActor in
-            self.duration = seconds
-            self.audioFile = url
-            self.isFileLoaded = true
-        }
-        print("MP4ファイル読み込み: \(url.path)")
-    }
-    
     // 通常の音声ファイルを読み込む
     private func loadAudioPlayer(with url: URL) async throws {
         do {
@@ -418,7 +388,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                 self.audioFile = url
                 self.isFileLoaded = true
             }
-            print("音声ファイルを読み込みました: \(url.path)")
         } catch {
             throw WhisperError.audioFileLoadFailed
         }
