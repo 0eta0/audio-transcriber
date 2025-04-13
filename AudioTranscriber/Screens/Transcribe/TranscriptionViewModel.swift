@@ -4,6 +4,8 @@ import Combine
 
 protocol TranscriptionViewModelType: ObservableObject, Sendable {
 
+    var autoScrollEnabled: Bool { get set }
+
     var audioFile: URL? { get set }
     var duration: TimeInterval { get set }
     var currentTime: TimeInterval { get set }
@@ -33,11 +35,16 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     func formatTimeForExport(_ time: TimeInterval) -> String
     func createDefaultFilename() -> String
     func resetAll()
+    func autoScrollEnabled(with duration: TimeInterval?)
+    func autoScrollDisabled()
 }
 
 final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // MARK: - Properties
+
+    // UI
+    @Published var autoScrollEnabled: Bool = false
 
     // 音声ファイル関連
     @Published var audioFile: URL?
@@ -53,6 +60,10 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     @Published var transcribingProgress: TimeInterval = .zero
     @Published var currentSegmentID: UUID = UUID()
     @Published var error: WhisperError?
+
+    // UI
+    private var forceAutoScrollEnabled: Bool = false
+    private var forceAutoScrollDurationTimer: Timer?
 
     // 音声処理関連
     private var audioPlayer: AVAudioPlayer?
@@ -282,6 +293,24 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             audioPlayer = nil
         }
     }
+
+    func autoScrollEnabled(with duration: TimeInterval?) {
+        autoScrollEnabled = true
+        guard let duration = duration else { return }
+
+        forceAutoScrollEnabled = true
+        forceAutoScrollDurationTimer?.invalidate()
+        forceAutoScrollDurationTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
+            self?.forceAutoScrollEnabled = false
+        }
+    }
+
+    func autoScrollDisabled() {
+        guard !forceAutoScrollEnabled else { return }
+
+        autoScrollEnabled = false
+    }
+
 
     // MARK: - Private Functions
 

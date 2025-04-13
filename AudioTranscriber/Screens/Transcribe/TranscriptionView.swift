@@ -299,7 +299,6 @@ struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
     // MARK: Properties
 
     @ObservedObject private var viewModel: ViewModel
-    @State private var autoScrollEnabled = true
 
     // MARK: Initializer
 
@@ -316,18 +315,15 @@ struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
                     if viewModel.transcribedSegments.isEmpty {
                         EmptyTranscriptionView(viewModel: viewModel)
                     } else {
-                        TranscriptionListView(
-                            viewModel: viewModel,
-                            autoScrollEnabled: $autoScrollEnabled
-                        )
+                        TranscriptionListView(viewModel: viewModel)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(NSColor.textBackgroundColor))
 
-                if !autoScrollEnabled && !viewModel.transcribedSegments.isEmpty {
+                if !viewModel.autoScrollEnabled && !viewModel.transcribedSegments.isEmpty {
                     Button(action: {
-                        autoScrollEnabled = true
+                        viewModel.autoScrollEnabled(with: 1.0)
                         withAnimation {
                             scrollView.scrollTo(viewModel.currentSegmentID, anchor: .center)
                         }
@@ -343,7 +339,8 @@ struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
                 }
             }
             .onChange(of: viewModel.currentSegmentID) { _, id in
-                if autoScrollEnabled {
+                if viewModel.autoScrollEnabled {
+                    viewModel.autoScrollEnabled(with: 1.0)
                     withAnimation {
                         scrollView.scrollTo(id, anchor: .center)
                     }
@@ -432,16 +429,13 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
 
-    @Binding var autoScrollEnabled: Bool
-
     @ObservedObject private var viewModel: ViewModel
     @State private var previousOffset: CGFloat = 0
 
     // MARK: Initializer
 
-    init(viewModel: ViewModel, autoScrollEnabled: Binding<Bool>) {
+    init(viewModel: ViewModel) {
         self.viewModel = viewModel
-        self._autoScrollEnabled = autoScrollEnabled
     }
 
     // MARK: Lifecycle
@@ -456,6 +450,7 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
                     )
                     .id(segment.id)
                     .onTapGesture {
+                        viewModel.autoScrollEnabled(with: 1.0)
                         viewModel.playFromSegment(segment)
                     }
                 }
@@ -469,11 +464,10 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
             })
         }
         .onPreferenceChange(OffsetPreferenceKey.self) { offset in
-            let delta = offset - previousOffset
+            let delta = abs(offset - previousOffset) / 100
             previousOffset = offset
-            print(abs(delta) / 100)
-            if (abs(delta) / 100) > 1 {
-                autoScrollEnabled = false
+            if delta > 0.3 {
+                viewModel.autoScrollDisabled()
             }
         }
     }
