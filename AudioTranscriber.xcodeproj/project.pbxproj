@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		66827F6B2DAAA72400F77592 /* Dependency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66827F6A2DAAA72400F77592 /* Dependency.swift */; };
 		6682801C2DAABDA800F77592 /* EnvironmentValues+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */; };
-		6682801D2DAABDA800F77592 /* Color+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668280192DAABDA800F77592 /* Color+.swift */; };
 		6682801F2DAAD1E500F77592 /* TranscriptionTextDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6682801E2DAAD1E500F77592 /* TranscriptionTextDocument.swift */; };
 		668280212DABC35300F77592 /* WhisperInitializeStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668280202DABC34D00F77592 /* WhisperInitializeStatus.swift */; };
 		66E6B0F92DAA9EC90090E104 /* WhisperError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E6B0F82DAA9EC40090E104 /* WhisperError.swift */; };
@@ -26,7 +25,6 @@
 
 /* Begin PBXFileReference section */
 		66827F6A2DAAA72400F77592 /* Dependency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependency.swift; sourceTree = "<group>"; };
-		668280192DAABDA800F77592 /* Color+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+.swift"; sourceTree = "<group>"; };
 		6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EnvironmentValues+.swift"; sourceTree = "<group>"; };
 		6682801E2DAAD1E500F77592 /* TranscriptionTextDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionTextDocument.swift; sourceTree = "<group>"; };
 		668280202DABC34D00F77592 /* WhisperInitializeStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperInitializeStatus.swift; sourceTree = "<group>"; };
@@ -58,7 +56,6 @@
 		6682801B2DAABDA800F77592 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
-				668280192DAABDA800F77592 /* Color+.swift */,
 				6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */,
 			);
 			path = Extensions;
@@ -224,7 +221,6 @@
 				FCF01A102B8E1E7A00F12345 /* TranscriptSegment.swift in Sources */,
 				FCF01A132B8E1E8A00F12345 /* TranscriptionViewModel.swift in Sources */,
 				6682801C2DAABDA800F77592 /* EnvironmentValues+.swift in Sources */,
-				6682801D2DAABDA800F77592 /* Color+.swift in Sources */,
 				FCF01A012B8E1E5000F12345 /* AudioTranscriberApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -351,7 +347,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = AudioTranscriber/AudioTranscriber.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -380,7 +376,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = AudioTranscriber/AudioTranscriber.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;

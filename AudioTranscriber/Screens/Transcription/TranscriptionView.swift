@@ -9,7 +9,6 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 
     @StateObject private var viewModel: ViewModel
     
-    // UI State
     @State private var isFilePickerPresented = false
     @State private var showingAlert = false
     @State private var alertMessage = ""

@@ -10,7 +10,6 @@ protocol WhisperManagerType {
     func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment]
 }
 
-// Making WhisperManager sendable by adding @unchecked Sendable conformance
 final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
     // MARK: Properties
@@ -39,7 +38,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         let config = WhisperKitConfig(
             model: modelName,
             modelRepo: modelRepo,
-            verbose: true,
+            verbose: false,
             download: true
         )
         do {
@@ -53,11 +52,13 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
                 }
             )
             progressCallback?(.loadingModel)
+
             let whisperKit = try await WhisperKit(config)
             try await whisperKit.loadModels()
             // モデルの読み込みが成功した場合、WhisperKitインスタンスを保存
             self.whisperKit = whisperKit
             currentModelName = modelName
+
             progressCallback?(.ready)
         } catch {
             throw WhisperError.failedToInitialize
@@ -117,7 +118,6 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         audioDuration: TimeInterval,
         progressCallback: @escaping (TimeInterval) -> Void
     ) async throws -> [TranscriptSegment]{
-        // 音声ファイルをロード
         do {
             // 文字起こし設定
             let decodeOptions = DecodingOptions(
@@ -142,6 +142,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
             for segment in result.segments {
                 let cleanedText = removeTagsFromText(segment.text)
+                // 同じテキストが連続している場合は、前のセグメントを更新
                 if let last = segments.last, last.text == cleanedText {
                     let ts = TranscriptSegment(
                         text: cleanedText.trimmingCharacters(in: .whitespacesAndNewlines),

@@ -18,41 +18,28 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     var transcribingProgress: TimeInterval { get set }
     var currentSegmentID: UUID { get set }
     var error: WhisperError? { get set }
-    
-    // Model related properties
+
     var currentModelName: String { get }
     var supportedModels: [String] { get }
 
     func loadAudioFile(url: URL) async
     func togglePlayback()
-    func startPlayback()
-    func pausePlayback()
-    func stopPlayback()
     func seekToPosition(_ position: Double)
     func seekRelative(seconds: Double)
     func transcribeAudio()
     func retranscribeAudio()
     func saveTranscription(to url: URL)
     func playFromSegment(_ segment: TranscriptSegment)
-    
-    // Added new methods
     func exportTranscriptionText() -> String
-    func formatTimeForExport(_ time: TimeInterval) -> String
     func createDefaultFilename() -> String
     func resetAll()
     func autoScrollEnabled(with duration: TimeInterval?)
     func autoScrollDisabled()
-    
-    // Added model selection method
-    func changeWhisperModel(modelName: String) async throws
 }
 
 final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // MARK: - Properties
-
-    // UI
-    @Published var autoScrollEnabled: Bool = false
 
     // 音声ファイル関連
     @Published var audioFile: URL?
@@ -70,6 +57,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     @Published var error: WhisperError?
 
     // UI
+    @Published var autoScrollEnabled: Bool = false
     private var forceAutoScrollEnabled: Bool = false
     private var forceAutoScrollDurationTimer: Timer?
 
@@ -98,21 +86,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             } catch {
                 print(error.localizedDescription)
             }
-        }
-    }
-    
-    // MARK: - New Model Selection Method
-    
-    func changeWhisperModel(modelName: String) async throws {
-        do {
-            try await whisperManager?.setupWhisperIfNeeded(modelName: modelName)
-        } catch {
-            if let whisperError = error as? WhisperError {
-                self.error = whisperError
-            } else {
-                self.error = WhisperError.failedToInitialize
-            }
-            throw error
         }
     }
 
@@ -222,7 +195,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
 
-    // 音声を文字起こし
     func transcribeAudio() {
         guard let audioFileURL = audioFile, !isTranscribing else { return }
 
@@ -248,36 +220,13 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
 
-    // 音声を再文字起こし
     func retranscribeAudio() {
-        guard let audioFileURL = audioFile, !isTranscribing else { return }
-        
         Task { @MainActor [self] in
-            // Clear existing transcription
             resetTranscription()
-            // Start new transcription
-            isTranscribing = true
-            do {
-                let result = try await self.whisperManager?.transcribe(url: audioFileURL) { [weak self] progress in
-                    guard let self = self else { return }
-                    Task { @MainActor in
-                        self.transcribingProgress = progress
-                    }
-                }
-                if let result = result {
-                    transcribedSegments = result
-                }
-            } catch let e as WhisperError {
-                print("文字起こしエラー: \(e.localizedDescription)")
-                self.error = error
-            } catch {
-                self.error = WhisperError.transcriptionFailed
-            }
-            isTranscribing = false
+            transcribeAudio()
         }
     }
 
-    // 文字起こし結果を保存
     func saveTranscription(to url: URL) {
         guard !transcribedSegments.isEmpty else { return }
 
@@ -295,7 +244,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
 
-    // 特定のセグメントから再生
     func playFromSegment(_ segment: TranscriptSegment) {
         guard let player = audioPlayer else { return }
 
@@ -308,8 +256,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             startPlayback()
         }
     }
-    
-    // Export transcription text
+
     func exportTranscriptionText() -> String {
         transcribedSegments
             .map { segment in
@@ -319,7 +266,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             .joined(separator: "\n\n")
     }
 
-    // Format time for export
     func formatTimeForExport(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
@@ -327,7 +273,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         return String(format: "%02d:%02d.%03d", minutes, seconds, milliseconds)
     }
 
-    // Create default filename
     func createDefaultFilename() -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd-HHmm"
@@ -340,7 +285,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
 
-    // Reset all loaded data and transcription
     func resetAll() {
         Task { @MainActor in
             stopPlayback()
