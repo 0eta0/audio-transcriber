@@ -11,6 +11,7 @@
 		6682801C2DAABDA800F77592 /* EnvironmentValues+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */; };
 		6682801D2DAABDA800F77592 /* Color+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668280192DAABDA800F77592 /* Color+.swift */; };
 		6682801F2DAAD1E500F77592 /* TranscriptionTextDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6682801E2DAAD1E500F77592 /* TranscriptionTextDocument.swift */; };
+		668280212DABC35300F77592 /* WhisperInitializeStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668280202DABC34D00F77592 /* WhisperInitializeStatus.swift */; };
 		66E6B0F92DAA9EC90090E104 /* WhisperError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E6B0F82DAA9EC40090E104 /* WhisperError.swift */; };
 		66E6B0FB2DAA9F100090E104 /* SetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E6B0FA2DAA9F0B0090E104 /* SetupViewModel.swift */; };
 		66F71D112D99AF4700451331 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 66F71D102D99AF4700451331 /* WhisperKit */; };
@@ -28,6 +29,7 @@
 		668280192DAABDA800F77592 /* Color+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+.swift"; sourceTree = "<group>"; };
 		6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EnvironmentValues+.swift"; sourceTree = "<group>"; };
 		6682801E2DAAD1E500F77592 /* TranscriptionTextDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionTextDocument.swift; sourceTree = "<group>"; };
+		668280202DABC34D00F77592 /* WhisperInitializeStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperInitializeStatus.swift; sourceTree = "<group>"; };
 		66E6B0F82DAA9EC40090E104 /* WhisperError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperError.swift; sourceTree = "<group>"; };
 		66E6B0FA2DAA9F0B0090E104 /* SetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupViewModel.swift; sourceTree = "<group>"; };
 		66F71D122D99B02200451331 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
@@ -62,13 +64,13 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
-		66E6B0F72DAA9E420090E104 /* Transcribe */ = {
+		66E6B0F72DAA9E420090E104 /* Transcription */ = {
 			isa = PBXGroup;
 			children = (
 				FCF01A022B8E1E5000F12345 /* TranscriptionView.swift */,
 				FCF01A122B8E1E8A00F12345 /* TranscriptionViewModel.swift */,
 			);
-			path = Transcribe;
+			path = Transcription;
 			sourceTree = "<group>";
 		};
 		66F71D132D99B02200451331 /* Setup */ = {
@@ -113,6 +115,7 @@
 		FCF01A0E2B8E1E7000F12345 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				668280202DABC34D00F77592 /* WhisperInitializeStatus.swift */,
 				6682801E2DAAD1E500F77592 /* TranscriptionTextDocument.swift */,
 				66E6B0F82DAA9EC40090E104 /* WhisperError.swift */,
 				FCF01A0F2B8E1E7A00F12345 /* TranscriptSegment.swift */,
@@ -124,7 +127,7 @@
 			isa = PBXGroup;
 			children = (
 				66F71D132D99B02200451331 /* Setup */,
-				66E6B0F72DAA9E420090E104 /* Transcribe */,
+				66E6B0F72DAA9E420090E104 /* Transcription */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -215,6 +218,7 @@
 				6682801F2DAAD1E500F77592 /* TranscriptionTextDocument.swift in Sources */,
 				FCF01A162B8E1E9A00F12345 /* WhisperManager.swift in Sources */,
 				66827F6B2DAAA72400F77592 /* Dependency.swift in Sources */,
+				668280212DABC35300F77592 /* WhisperInitializeStatus.swift in Sources */,
 				66E6B0F92DAA9EC90090E104 /* WhisperError.swift in Sources */,
 				66E6B0FB2DAA9F100090E104 /* SetupViewModel.swift in Sources */,
 				FCF01A102B8E1E7A00F12345 /* TranscriptSegment.swift in Sources */,
@@ -347,6 +351,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = AudioTranscriber/AudioTranscriber.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -375,6 +380,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = AudioTranscriber/AudioTranscriber.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;

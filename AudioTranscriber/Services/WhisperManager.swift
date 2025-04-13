@@ -2,11 +2,11 @@ import Foundation
 import AVFoundation
 @preconcurrency import WhisperKit
 
-
 protocol WhisperManagerType {
 
-    func setupWhisperIfNeeded(modelName: String) async throws
+    func setupWhisperIfNeeded(modelName: String, progressCallback: ((WhisperInitializeStatus) -> Void)?) async throws
     func supportedModel() -> [String]
+    func currentModel() -> String
     func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment]
 }
 
@@ -15,21 +15,25 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
     // MARK: Properties
 
-    // WhisperKitの各種モデルコンポーネント
     private var whisperKit: WhisperKit?
-    // 言語設定
-    private let language = "ja" // 日本語文字起こし用
-    // WhisperKitのダウンロード設定
+    private let language = "ja"
     private let modelRepo = "argmaxinc/whisperkit-coreml"
-    // WhisperKitのロード状態
-    private var isLoading = false
+    private var currentModelName: String = "openai_whisper-base"
 
     // MARK: Public Functions
 
     // WhisperKitの初期設定
-    func setupWhisperIfNeeded(modelName: String = "base") async throws {
-        if whisperKit == nil, isLoading {
+    func setupWhisperIfNeeded(modelName: String, progressCallback: ((WhisperInitializeStatus) -> Void)? = nil) async throws {
+        // モデルが変更された場合か、まだ初期化されていない場合のみセットアップを実行
+        if (whisperKit != nil && currentModelName == modelName) {
             return
+        }
+
+        progressCallback?(.checkingModel)
+        // モデル名が有効かチェック
+        let supported = supportedModel()
+        guard supported.contains(modelName) else {
+            throw WhisperError.unsupportedModel
         }
         // WhisperKitの設定を作成
         let config = WhisperKitConfig(
@@ -39,12 +43,22 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             download: true
         )
         do {
-            // モデルを初期化
+            progressCallback?(.downloadingModel(progress: 0.0))
+            // WhisperKitのダウンロードを実行
+            _ = try await WhisperKit.download(
+                variant: modelName,
+                from: modelRepo,
+                progressCallback: { progress in
+                    progressCallback?(.downloadingModel(progress: progress.fractionCompleted))
+                }
+            )
+            progressCallback?(.loadingModel)
             let whisperKit = try await WhisperKit(config)
-            // モデルの読み込み
             try await whisperKit.loadModels()
             // モデルの読み込みが成功した場合、WhisperKitインスタンスを保存
             self.whisperKit = whisperKit
+            currentModelName = modelName
+            progressCallback?(.ready)
         } catch {
             throw WhisperError.failedToInitialize
         }
@@ -53,10 +67,14 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
     func supportedModel() -> [String] {
         return WhisperKit.recommendedModels().supported
     }
+    
+    func currentModel() -> String {
+        return currentModelName
+    }
 
     // 音声ファイルを文字起こしする
     func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment] {
-        try await setupWhisperIfNeeded()
+        try await setupWhisperIfNeeded(modelName: currentModelName)
         // ファイル形式を確認
         let fileExtension = url.pathExtension.lowercased()
         let supportedFormats = ["wav", "mp3", "m4a", "flac", "mp4"]

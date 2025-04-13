@@ -4,140 +4,172 @@ struct SetupView<ViewModel: SetupViewModelType>: View {
 
     // MARK: Properties
 
-    @Environment(\.presentationMode) var presentationMode
-
     @StateObject var viewModel: ViewModel
-    @Binding var isSetupCompleted: Bool
+    @Binding var showSetupModal: Bool
 
     // MARK: Lifecycle
 
     var body: some View {
         VStack(spacing: 20) {
-            HStack {
-                Text("音声文字起こしモデルが必要です")
-                    .font(.title)
-                    .padding(.top, 30)
-                    .padding(.leading, 30)
+            Text("音声文字起こしモデルの変更")
+                .font(.title)
+                .padding(.top, 24)
+                .padding(.leading, 24)
 
-                Spacer()
-                
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "xmark.circle")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-                .padding([.top, .trailing], 20)
-            }
-            
-            Text("文字起こしを行うために必要なWhisperモデルをダウンロードする必要があります。\nダウンロードはアプリ内でできます。")
+            Text("文字起こしに使用するWhisperモデルを変更できます。\nモデルによって精度と処理速度が異なります。")
                 .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
+
             Divider()
-                .padding(.vertical, 5)
-            
-            VStack(spacing: 20) {
-                if viewModel.isDownloading {
-                    ProgressView(value: viewModel.downloadProgress, total: 1.0)
-                        .progressViewStyle(LinearProgressViewStyle())
-                        .frame(height: 10)
-                        .padding(.horizontal)
-                    
-                    Text("\(Int(viewModel.downloadProgress * 100))%")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Text(viewModel.statusMessage)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                } else if viewModel.isError {
-                    Image(systemName: "exclamationmark.triangle")
-                        .resizable()
-                        .frame(width: 50, height: 50)
-                        .foregroundColor(.red)
-                        .padding()
-                    
-                    Text("モデルのダウンロードに失敗しました")
-                        .foregroundColor(.red)
-                        .font(.headline)
-                    
-                    Text(viewModel.statusMessage)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    VStack(spacing: 10) {
-                        Button("再試行") {
-                            viewModel.downloadModel()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .padding(.top)
-                        
-                        Button("既存のモデルをクリーンアップして再ダウンロード") {
-                            viewModel.resetAndRedownloadModel()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+                .padding(.vertical, 4)
+
+            VStack {
+                switch viewModel.status {
+                case .waitingSelection(let description):
+                    SelectionView(
+                        selectedModel: $viewModel.selectedModel,
+                        currentModel: viewModel.currentModel,
+                        description: description,
+                        supportedModels: viewModel.supportedModels
+                    ) {
+                        viewModel.changeModel()
                     }
-                } else if !viewModel.hasStarted {
-                    Image(systemName: "arrow.down.circle")
-                        .resizable()
-                        .frame(width: 60, height: 60)
-                        .foregroundColor(.accentColor)
-                        .padding()
-                    
-                    Text("このアプリは、すべての処理をローカルで実行するためのAIモデルが必要です。")
-                        .multilineTextAlignment(.center)
-                    
-                    Text("お使いのデバイスに応じて500MB〜1GBのダウンロードが必要です。")
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 5)
-                    
-                    Button("モデルをダウンロード") {
-                        viewModel.downloadModel()
+                case .changing(let description, let status):
+                    LoadingView(description: description, status: status)
+                case .error(let description):
+                    ErrorView(description: description) {
+                        viewModel.changeModel()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .padding(.top, 10)
-                } else {
-                    Image(systemName: "checkmark.circle")
-                        .resizable()
-                        .frame(width: 50, height: 50)
-                        .foregroundColor(.green)
-                        .padding()
-                    
-                    Text("セットアップが完了しました")
-                        .foregroundColor(.green)
-                        .font(.headline)
-                    
-                    Button("アプリに戻る") {
-                        isSetupCompleted = true
-                        presentationMode.wrappedValue.dismiss()
+                case .completed(let description):
+                    CompletionView(description: description) {
+                        showSetupModal = false
                     }
-                    .buttonStyle(.borderedProminent)
-                    .padding()
                 }
             }
-            .padding()
+            .padding(.all, 24)
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(8)
-            
-            Spacer()
-            
-            HStack(spacing: 15) {
-                Image(systemName: "info.circle")
-                    .foregroundColor(.secondary)
-                
-                Text("モデルは一度ダウンロードすれば、今後ダウンロードは不要です")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.bottom, 20)
         }
-        .padding(.horizontal)
-        .frame(width: 550)
     }
 }
+
+// MARK: - Component Views
+
+struct SelectionView: View {
+
+    // MARK: Properties
+
+    @Binding var selectedModel: String
+
+    var currentModel: String
+
+    let description: String
+    let supportedModels: [String]
+    let changeAction: () -> Void
+
+    // MARK: Lifecycle
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(description)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Text("現在のモデル: \(currentModel)")
+                .padding(.top, 5)
+
+            Picker("モデルの選択", selection: $selectedModel) {
+                ForEach(supportedModels, id: \.self) { model in
+                    Text(model).tag(model)
+                }
+            }
+            .frame(width: 320)
+
+            Button("モデルを変更", action: changeAction)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .padding(.top, 10)
+        }
+    }
+}
+
+struct LoadingView: View {
+
+    // MARK: Properties
+
+    let description: String
+    let status: WhisperInitializeStatus
+
+    // MARK: Lifecycle
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(description)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Text(status.description)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            ProgressView()
+        }
+    }
+}
+
+struct ErrorView: View {
+
+    // MARK: Properties
+
+    let description: String
+    let retryAction: () -> Void
+
+    // MARK: Lifecycle
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(description)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button("再試行", action: retryAction)
+                .buttonStyle(.borderedProminent)
+                .padding(.top)
+        }
+    }
+}
+
+struct CompletionView: View {
+
+    // MARK: Properties
+
+    let description: String
+    let dismissAction: () -> Void
+
+    // MARK: Lifecycle
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(description)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button("アプリに戻る", action: dismissAction)
+                .buttonStyle(.borderedProminent)
+                .padding()
+        }
+    }
+}
+
+#Preview {
+    let vm = SetupViewModel(whisperManager: WhisperManager(), status: .waitingSelection(description: "ステータスの表示"))
+    SetupView(viewModel: vm, showSetupModal: .constant(true))
+        .frame(width: 550, height: 400)
+        .background(Color(NSColor.windowBackgroundColor))
+        .cornerRadius(16)
+        .padding()
+}
+

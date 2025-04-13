@@ -1,32 +1,32 @@
-// Whisperによる文字起こしのエラー型
-enum WhisperError: Error {
-    case unsupportedFormat
-    case uninitialized
-    case failedToInitialize
-    case transcriptionFailed
-    case fileAccessDenied
-    case fileLoadError
-    case noAudioTrackFound
-    case unknown
+import Foundation
 
-    var localizedDescription: String {
+enum WhisperError: Error {
+    case fileNotFound
+    case unsupportedFormat
+    case failedToInitialize
+    case uninitialized
+    case transcriptionFailed
+    case unsupportedModel
+    case audioFileLoadFailed
+}
+
+extension WhisperError: LocalizedError {
+    var errorDescription: String? {
         switch self {
+        case .fileNotFound:
+            return "ファイルが見つかりませんでした"
         case .unsupportedFormat:
-            return "Unsupported audio format."
-        case .uninitialized:
-            return "WhisperKit is not initialized."
+            return "サポートされていないファイル形式です"
         case .failedToInitialize:
-            return "Failed to initialize WhisperKit."
+            return "Whisperの初期化に失敗しました"
+        case .uninitialized:
+            return "Whisperが初期化されていません"
         case .transcriptionFailed:
-            return "Transcription failed."
-        case .fileAccessDenied:
-            return "File access denied."
-        case .fileLoadError:
-            return "Failed to load the audio file."
-        case .noAudioTrackFound:
-            return "No audio track found in the file."
-        case .unknown:
-            return "An unknown error occurred."
+            return "文字起こし処理に失敗しました"
+        case .unsupportedModel:
+            return "サポートされていないモデル名です"
+        case .audioFileLoadFailed:
+            return "ファイルの読み込みに失敗しました"
         }
     }
 }

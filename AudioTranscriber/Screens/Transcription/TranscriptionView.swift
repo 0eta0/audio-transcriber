@@ -14,7 +14,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
     @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var isDraggingOver = false
-    @State private var showModelSetup = false
+    @State private var showSetupModal = true
 
     // MARK: Initializer
 
@@ -25,63 +25,68 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
     // MARK: Lifecycle
 
     var body: some View {
-        ZStack {
-            if viewModel.isFileLoaded {
-                // ファイルが読み込まれている場合の通常のレイアウト
-                VStack(spacing: 0) {
-                    ToolbarView(
-                        viewModel: viewModel,
-                        isFilePickerPresented: $isFilePickerPresented,
-                        showingAlert: $showingAlert,
-                        alertMessage: $alertMessage
-                    )
-
-                    Divider()
-
+        if let dependency = dependency {
+            ZStack {
+                if viewModel.isFileLoaded {
+                    // ファイルが読み込まれている場合の通常のレイアウト
                     VStack(spacing: 0) {
-                        TranscriptionContentView(viewModel: viewModel)
+                        ToolbarView(
+                            viewModel: viewModel,
+                            isFilePickerPresented: $isFilePickerPresented,
+                            showingAlert: $showingAlert,
+                            alertMessage: $alertMessage,
+                            showSetupModal: $showSetupModal
+                        )
 
                         Divider()
 
-                        AudioPlayerView(viewModel: viewModel)
+                        VStack(spacing: 0) {
+                            TranscriptionContentView(viewModel: viewModel)
+
+                            Divider()
+
+                            AudioPlayerView(viewModel: viewModel)
+                        }
                     }
+                } else {
+                    // ファイルが読み込まれていない場合の初期画面
+                    FileLoadingPromptView(
+                        showSetupModal: $showSetupModal,
+                        isFilePickerPresented: $isFilePickerPresented,
+                        isDraggingOver: $isDraggingOver
+                    )
                 }
-            } else {
-                // ファイルが読み込まれていない場合の初期画面
-                FileLoadingPromptView(
-                    isFilePickerPresented: $isFilePickerPresented,
-                    isDraggingOver: $isDraggingOver
-                )
             }
-        }
-        .alert(alertMessage, isPresented: $showingAlert) {
-            Button("OK", role: .cancel) {}
-        }
-        .onDrop(of: [.fileURL, .audio, .mpeg4Movie], isTargeted: $isDraggingOver) { providers in
-            handleDrop(providers: providers)
-        }
-        .sheet(isPresented: $showModelSetup) {
-            let viewModel = SetupViewModel()
-            SetupView(viewModel: viewModel, isSetupCompleted: $showModelSetup)
-                .frame(minWidth: 500, minHeight: 400)
-        }
-        .fileImporter(
-            isPresented: $isFilePickerPresented,
-            allowedContentTypes: [.fileURL, .audio, .mpeg4Movie],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case .success(let urls):
-                guard let url = urls.first else {
-                    return
-                }
-                Task { @MainActor in
-                    await viewModel.loadAudioFile(url: url)
-                }
-            case .failure(let error):
-                alertMessage = "ファイル選択エラー: \(error.localizedDescription)"
-                showingAlert = true
+            .alert(alertMessage, isPresented: $showingAlert) {
+                Button("OK", role: .cancel) {}
             }
+            .onDrop(of: [.fileURL, .audio, .mpeg4Movie], isTargeted: $isDraggingOver) { providers in
+                handleDrop(providers: providers)
+            }
+            .sheet(isPresented: $showSetupModal) {
+                let setupViewModel = SetupViewModel(whisperManager: dependency.whisperManager)
+                SetupView(viewModel: setupViewModel, showSetupModal: $showSetupModal)
+            }
+            .fileImporter(
+                isPresented: $isFilePickerPresented,
+                allowedContentTypes: [.fileURL, .audio, .mpeg4Movie],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    guard let url = urls.first else {
+                        return
+                    }
+                    Task { @MainActor in
+                        await viewModel.loadAudioFile(url: url)
+                    }
+                case .failure(let error):
+                    alertMessage = "ファイル選択エラー: \(error.localizedDescription)"
+                    showingAlert = true
+                }
+            }
+        } else {
+            EmptyView()
         }
     }
     
@@ -141,17 +146,20 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
     @Binding var alertMessage: String
     @State private var showingSavePanel = false
     @State private var showingResetConfirmation = false
+    @Binding var showSetupModal: Bool
 
     // MARK: Initializer
 
     init(viewModel: ViewModel,
             isFilePickerPresented: Binding<Bool>,
             showingAlert: Binding<Bool>,
-            alertMessage: Binding<String>) {
+            alertMessage: Binding<String>,
+         showSetupModal: Binding<Bool>) {
         self.viewModel = viewModel
         self._isFilePickerPresented = isFilePickerPresented
         self._showingAlert = showingAlert
         self._alertMessage = alertMessage
+        self._showSetupModal = showSetupModal
     }
 
     // MARK: Lifecycle
@@ -162,6 +170,14 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
                 .font(.headline)
                 .lineLimit(1)
             Spacer()
+            
+            Button(action: {
+                showSetupModal = true
+            }) {
+                Label("モデル選択", systemImage: "brain")
+            }
+            .help("文字起こしモデルを選択")
+            .buttonStyle(.bordered)
             
             if !viewModel.transcribedSegments.isEmpty {
                 Button(action: {
@@ -549,12 +565,13 @@ struct TranscriptSegmentView: View {
 
 // ファイル読み込み前の初期画面
 struct FileLoadingPromptView: View {
-    
+
     // MARK: Properties
-    
+
+    @Binding var showSetupModal: Bool
     @Binding var isFilePickerPresented: Bool
     @Binding var isDraggingOver: Bool
-    
+
     // MARK: Lifecycle
     
     var body: some View {
@@ -562,38 +579,58 @@ struct FileLoadingPromptView: View {
             if isDraggingOver {
                 DragOverlayView()
             } else {
-                VStack(spacing: 20) {
-                    Image(systemName: "waveform")
-                        .font(.system(size: 60))
-                        .foregroundColor(.accentColor)
-                    
-                    Text("音声、動画ファイルをドラッグ＆ドロップ")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                    
-                    Text("または")
-                        .foregroundColor(.secondary)
-                    
-                    Button(action: {
-                        isFilePickerPresented = true
-                    }) {
-                        Label("音声、動画ファイルを選択", systemImage: "folder")
-                            .padding()
-                            .frame(minWidth: 200)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                VStack {
+                    audioInputView()
+
+                    changeModel()
                 }
-                .padding(40)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.secondary.opacity(0.2), lineWidth: 2)
-                        .background(Color(NSColor.windowBackgroundColor))
-                )
-                .padding(40)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(NSColor.windowBackgroundColor))
+    }
+
+    // MARK: Private Functions
+
+    private func audioInputView() -> some View {
+        VStack(spacing: 20) {
+            Image(systemName: "waveform")
+                .font(.system(size: 60))
+                .foregroundColor(.accentColor)
+
+            Text("音声、動画ファイルをドラッグ＆ドロップ")
+                .font(.title2)
+                .fontWeight(.medium)
+
+            Text("または")
+                .foregroundColor(.secondary)
+
+            Button(action: {
+                isFilePickerPresented = true
+            }) {
+                Label("音声、動画ファイルを選択", systemImage: "folder")
+                    .padding()
+                    .frame(minWidth: 200)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+        }
+        .padding(40)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.secondary.opacity(0.2), lineWidth: 2)
+                .background(Color(NSColor.windowBackgroundColor))
+        )
+        .padding(40)
+    }
+
+    private func changeModel() -> some View {
+        Button(action: {
+            showSetupModal = true
+        }) {
+            Label("モデル選択", systemImage: "brain")
+        }
+        .help("文字起こしモデルを選択")
+        .buttonStyle(.bordered)
     }
 }

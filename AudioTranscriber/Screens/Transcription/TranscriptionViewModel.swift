@@ -18,6 +18,10 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     var transcribingProgress: TimeInterval { get set }
     var currentSegmentID: UUID { get set }
     var error: WhisperError? { get set }
+    
+    // Model related properties
+    var currentModelName: String { get }
+    var supportedModels: [String] { get }
 
     func loadAudioFile(url: URL) async
     func togglePlayback()
@@ -37,6 +41,9 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     func resetAll()
     func autoScrollEnabled(with duration: TimeInterval?)
     func autoScrollDisabled()
+    
+    // Added model selection method
+    func changeWhisperModel(modelName: String) async throws
 }
 
 final class TranscriptionViewModel: TranscriptionViewModelType {
@@ -70,6 +77,15 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     private var timer: Timer?
     private var whisperManager: WhisperManager?
     private var cancellables = Set<AnyCancellable>()
+    
+    // Model related properties
+    var currentModelName: String {
+        return whisperManager?.currentModel() ?? "base"
+    }
+    
+    var supportedModels: [String] {
+        return whisperManager?.supportedModel() ?? []
+    }
 
     // MARK: - Initializer
 
@@ -77,10 +93,25 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         whisperManager = WhisperManager()
         Task {
             do {
-                try await whisperManager?.setupWhisperIfNeeded()
+                try await whisperManager?.setupWhisperIfNeeded(modelName: "base")
             } catch {
                 print(error.localizedDescription)
             }
+        }
+    }
+    
+    // MARK: - New Model Selection Method
+    
+    func changeWhisperModel(modelName: String) async throws {
+        do {
+            try await whisperManager?.setupWhisperIfNeeded(modelName: modelName)
+        } catch {
+            if let whisperError = error as? WhisperError {
+                self.error = whisperError
+            } else {
+                self.error = WhisperError.failedToInitialize
+            }
+            throw error
         }
     }
 
@@ -109,7 +140,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                 }
             } catch {
                 Task { @MainActor in
-                    self.error = WhisperError.fileLoadError
+                    self.error = WhisperError.audioFileLoadFailed
                 }
             }
         }
@@ -210,7 +241,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                 print("文字起こしエラー: \(e.localizedDescription)")
                 self.error = error
             } catch {
-                self.error = .unknown
+                self.error = WhisperError.transcriptionFailed
             }
             isTranscribing = false
         }
@@ -375,7 +406,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         let audioTracks = try await asset.loadTracks(withMediaType: .audio)
 
         guard !audioTracks.isEmpty else {
-            throw WhisperError.noAudioTrackFound
+            throw WhisperError.fileNotFound
         }
         
         // AVPlayerを使用して音声を再生（MP4対応）
@@ -384,7 +415,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         
         // 音声の長さを取得
         guard let playerItem = player.currentItem else {
-            throw WhisperError.fileLoadError
+            throw WhisperError.audioFileLoadFailed
         }
         
         let duration = try await playerItem.asset.load(.duration)
@@ -405,7 +436,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             audioPlayer?.prepareToPlay()
             
             guard let duration = audioPlayer?.duration else {
-                throw WhisperError.fileLoadError
+                throw WhisperError.audioFileLoadFailed
             }
             
             Task { @MainActor in
@@ -415,7 +446,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             }
             print("音声ファイルを読み込みました: \(url.path)")
         } catch {
-            throw WhisperError.fileLoadError
+            throw WhisperError.audioFileLoadFailed
         }
     }
 }

@@ -1,47 +1,76 @@
 import Foundation
+import SwiftUICore
+
+enum SetupStatusType {
+    case waitingSelection(description: String)
+    case changing(description: String, status: WhisperInitializeStatus)
+    case error(description: String)
+    case completed(description: String)
+
+    var description: String {
+        switch self {
+        case .waitingSelection(let description),
+                .changing(let description, _),
+                .error(let description),
+                .completed(let description):
+            return description
+        }
+    }
+}
 
 protocol SetupViewModelType: ObservableObject {
 
-    var isDownloading: Bool { get set }
-    var isError: Bool { get set }
-    var hasStarted: Bool { get set }
-    var statusMessage: String { get set }
-    var downloadProgress: Float { get set }
-    var errorDetails: String? { get set }
+    var status: SetupStatusType { get set }
+    var selectedModel: String { get set }
+    var supportedModels: [String] { get }
+    var currentModel: String { get }
 
-    func downloadModel()
-    func resetAndRedownloadModel()
+    func changeModel()
 }
 
 final class SetupViewModel: SetupViewModelType {
 
     // MARK: Properties
 
-    @Published var isDownloading = false
-    @Published var isError = false
-    @Published var hasStarted = false
-    @Published var statusMessage = "モデルをダウンロードしています..."
-    @Published var downloadProgress: Float = 0.0
-    @Published var errorDetails: String?
+    @Published var status: SetupStatusType
+    @Published var selectedModel: String
 
-    private let whisperManager = WhisperManager()
-    private var notificationObservers: [NSObjectProtocol] = []
+    var supportedModels: [String] {
+        return whisperManager.supportedModel()
+    }
+    var currentModel: String {
+        return whisperManager.currentModel()
+    }
+
+    private let whisperManager: WhisperManagerType
+
+    // MARK: Initializers
+
+    init(whisperManager: WhisperManagerType, status: SetupStatusType = .waitingSelection(description: "モデルを選択してください")) {
+        self.whisperManager = whisperManager
+
+        self.status = status
+        self.selectedModel = whisperManager.currentModel()
+    }
 
     // MARK: Public Functions
 
-    func downloadModel() {
-        isDownloading = true
-        hasStarted = true
-        isError = false
-        downloadProgress = 0.0
-        statusMessage = "Whisperモデルをダウンロードしています...\nこれには数分かかる場合があります"
-    }
+    func changeModel() {
+        Task { @MainActor in
+            let changingDescription = "\(selectedModel)\nに変更しています..."
+            status = .changing(description: changingDescription, status: .uninitialized)
+            do {
+                try await whisperManager.setupWhisperIfNeeded(modelName: selectedModel, progressCallback: { [weak self] progress in
+                    Task { @MainActor in
+                        guard let self = self else { return }
 
-    func resetAndRedownloadModel() {
-        isDownloading = true
-        hasStarted = true
-        isError = false
-        downloadProgress = 0.0
-        statusMessage = "モデルファイルをリセットし、再ダウンロードしています...\nこれには数分かかる場合があります"
+                        self.status = .changing(description: changingDescription, status: progress)
+                    }
+                })
+                status = .completed(description: "\(selectedModel)\nモデルの変更が完了しました")
+            } catch {
+                status = .error(description: "モデルの変更に失敗しました: \(error.localizedDescription)")
+            }
+        }
     }
 }
