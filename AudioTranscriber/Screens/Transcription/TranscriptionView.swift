@@ -147,6 +147,7 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
     @State private var showingSavePanel = false
     @State private var showingResetConfirmation = false
     @Binding var showSetupModal: Bool
+    @State private var showingRetranscribeConfirmation = false
 
     // MARK: Initializer
 
@@ -180,6 +181,24 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
             .buttonStyle(.bordered)
             
             if !viewModel.transcribedSegments.isEmpty {
+                Button(action: {
+                    showingRetranscribeConfirmation = true
+                }) {
+                    Label("再文字起こし", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .help("音声ファイルを再度文字起こしする")
+                .buttonStyle(.bordered)
+                .confirmationDialog(
+                    "文字起こしを再実行しますか？現在の文字起こし結果は消去されます。",
+                    isPresented: $showingRetranscribeConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button("再実行", role: .destructive) {
+                        viewModel.retranscribeAudio()
+                    }
+                    Button("キャンセル", role: .cancel) {}
+                }
+                
                 Button(action: {
                     showingSavePanel = true
                 }) {

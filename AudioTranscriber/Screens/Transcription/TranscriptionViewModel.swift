@@ -31,6 +31,7 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     func seekToPosition(_ position: Double)
     func seekRelative(seconds: Double)
     func transcribeAudio()
+    func retranscribeAudio()
     func saveTranscription(to url: URL)
     func playFromSegment(_ segment: TranscriptSegment)
     
@@ -226,6 +227,35 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         guard let audioFileURL = audioFile, !isTranscribing else { return }
 
         Task { @MainActor [self] in
+            isTranscribing = true
+            do {
+                let result = try await self.whisperManager?.transcribe(url: audioFileURL) { [weak self] progress in
+                    guard let self = self else { return }
+                    Task { @MainActor in
+                        self.transcribingProgress = progress
+                    }
+                }
+                if let result = result {
+                    transcribedSegments = result
+                }
+            } catch let e as WhisperError {
+                print("文字起こしエラー: \(e.localizedDescription)")
+                self.error = error
+            } catch {
+                self.error = WhisperError.transcriptionFailed
+            }
+            isTranscribing = false
+        }
+    }
+
+    // 音声を再文字起こし
+    func retranscribeAudio() {
+        guard let audioFileURL = audioFile, !isTranscribing else { return }
+        
+        Task { @MainActor [self] in
+            // Clear existing transcription
+            resetTranscription()
+            // Start new transcription
             isTranscribing = true
             do {
                 let result = try await self.whisperManager?.transcribe(url: audioFileURL) { [weak self] progress in
