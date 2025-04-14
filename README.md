@@ -1,5 +1,7 @@
 # AudioTranscriber
 
+[ダウンロードはこちら](https://github.com/0eta0/audio-transcriber/releases/download/v1.0.0/audio-transcriber.macos.zip)
+
 ローカルで動作する音声文字起こしアプリケーションです。音声ファイルを選択して文字起こしし、再生中の部分をリアルタイムで強調表示します。
 
 |||
