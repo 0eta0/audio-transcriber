@@ -15,8 +15,8 @@
 "SetupViewModel.changeModelErrorFormat" = "Failed to change model: %@";
 
 /* TranscriptionView */
-"TranscriptionView.selectAudioFile" = "Select Audio File";
-"TranscriptionView.dropAudioFile" = "Drop audio file here";
+"TranscriptionView.selectMediaFile" = "Select Media File";
+"TranscriptionView.dropMediaFile" = "Drop audio media here";
 "TranscriptionView.transcribe" = "Transcribe";
 "TranscriptionView.transcribing" = "Transcribing...";
 "TranscriptionView.errorTitle" = "Error";
@@ -42,9 +42,9 @@
 "TranscriptionView.noTranscription" = "No transcription available";
 "TranscriptionView.startTranscription" = "Start Transcription";
 "TranscriptionView.timeFormat" = "%d min %02d sec";
-"TranscriptionView.dragAndDropAudioFile" = "Drag & Drop Audio File";
+"TranscriptionView.dragAndDropMediaFile" = "Drag & Drop Media File";
 "TranscriptionView.or" = "or";
-"TranscriptionView.dropAudioFileHere" = "Drop audio file here";
+"TranscriptionView.dropMediaFileHere" = "Drop media file here";
 "TranscriptionView.fileSelectionErrorFormat" = "File selection error: %@";
 "TranscriptionView.untitled" = "untitled";
 "TranscriptionView.searchPlaceholder" = "Search Transcription";
@@ -59,6 +59,7 @@
 "WhisperError.transcriptionFailed" = "Transcription failed";
 "WhisperError.unsupportedModel" = "Unsupported model name";
 "WhisperError.audioFileLoadFailed" = "Failed to load audio file";
+"WhisperError.audioExportFailed" = "Failed to export audio from video file";
 
 /* WhisperInitializeStatus */
 "WhisperInitializeStatus.uninitialized" = "WhisperKit is not initialized";

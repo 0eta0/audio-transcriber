@@ -49,8 +49,16 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                     )
                 }
             }
+            .onChange(of: viewModel.error, { _, value in
+                if let error = value {
+                    alertMessage = error.localizedDescription
+                    showingAlert = true
+                }
+            })
             .alert(alertMessage, isPresented: $showingAlert) {
-                Button(L10n.Common.okButton, role: .cancel) {}
+                Button(L10n.Common.okButton, role: .cancel) {
+                    showingAlert = false
+                }
             }
             .sheet(isPresented: $showSetupModal) {
                 let setupViewModel = SetupViewModel(whisperManager: dependency.whisperManager)
@@ -58,7 +66,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
             }
             .fileImporter(
                 isPresented: $isFilePickerPresented,
-                allowedContentTypes: [.audio],
+                allowedContentTypes: SupportMediaType.allCasesAsUTType,
                 allowsMultipleSelection: false
             ) { result in
                 switch result {
@@ -322,9 +330,8 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
                 .frame(height: 24)
 
                 HStack {
-                    Text(formatTime(viewModel.currentTime))
                     Spacer()
-                    Text(formatTime(viewModel.duration))
+                    Text("\(formatTime(viewModel.currentTime)) / \(formatTime(viewModel.duration))")
                 }
                 .font(.caption)
             }
@@ -540,7 +547,9 @@ private struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: Vie
             let delta = abs(offset - previousOffset) / 100
             previousOffset = offset
             if delta > 0.3 {
-                viewModel.autoScrollDisabled()
+                Task { @MainActor in
+                    viewModel.autoScrollDisabled()
+                }
             }
         }
     }
@@ -640,7 +649,7 @@ private struct FileLoadingPromptView<ViewModel: TranscriptionViewModelType>: Vie
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(NSColor.windowBackgroundColor))
-        .onDrop(of: [.audio], isTargeted: $isDraggingOver) { providers in
+        .onDrop(of: SupportMediaType.allCasesAsUTType, isTargeted: $isDraggingOver) { providers in
             _ = viewModel.handleDrop(providers: providers)
             return true
         }
@@ -654,7 +663,7 @@ private struct FileLoadingPromptView<ViewModel: TranscriptionViewModelType>: Vie
                 .font(.system(size: 60))
                 .foregroundColor(.accentColor)
 
-            Text(L10n.TranscriptionView.dragAndDropAudioFile)
+            Text(L10n.TranscriptionView.dragAndDropMediaFile)
                 .font(.title2)
                 .fontWeight(.medium)
 
@@ -664,7 +673,7 @@ private struct FileLoadingPromptView<ViewModel: TranscriptionViewModelType>: Vie
             Button(action: {
                 isFilePickerPresented = true
             }) {
-                Label(L10n.TranscriptionView.selectAudioFile, systemImage: "folder")
+                Label(L10n.TranscriptionView.selectMediaFile, systemImage: "folder")
                     .padding()
                     .frame(minWidth: 200)
             }
@@ -704,7 +713,7 @@ private struct DragOverlayView: View {
                 VStack {
                     Image(systemName: "waveform")
                         .font(.largeTitle)
-                    Text(L10n.TranscriptionView.dropAudioFileHere)
+                    Text(L10n.TranscriptionView.dropMediaFileHere)
                         .font(.headline)
                 }
                 .foregroundColor(.accentColor)

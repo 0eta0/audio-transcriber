@@ -3,6 +3,7 @@ import AVFoundation
 import Combine
 import SwiftUI
 
+@MainActor
 protocol TranscriptionViewModelType: ObservableObject, Sendable {
 
     var autoScrollEnabled: Bool { get set }
@@ -34,7 +35,6 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     func seekRelative(seconds: Double)
     func transcribeAudio()
     func retranscribeAudio()
-    func saveTranscription(to url: URL)
     func playFromSegment(_ segment: TranscriptSegment)
     func exportTranscriptionText() -> String
     func createDefaultFilename() -> String
@@ -74,8 +74,10 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     @Published var searchText: String = ""
 
     // Audio processing related
-    private var audioPlayer: AVAudioPlayer?
-    private var timer: Timer?
+    private var audioPlayer: AVPlayer?
+    private var timeObserver: Any?
+
+    // WhisperKit related
     private var whisperManager: WhisperManagerType?
     private var cancellables = Set<AnyCancellable>()
     
@@ -110,7 +112,9 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                     progressCallback: nil
                 )
             } catch {
-                print(error.localizedDescription)
+                Task { @MainActor in
+                    self.error = WhisperError.failedToInitialize
+                }
             }
         }
     }
@@ -126,8 +130,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             do {
                 // File security access processing and copying
                 let tempURL = try await secureCopyFile(from: url)
-                // Check if the audio file format is supported
-                let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
+                let supportedFormats = SupportMediaType.allCases.map { $0.rawValue }
                 if !supportedFormats.contains(url.pathExtension.lowercased()) {
                     throw WhisperError.unsupportedFormat
                 }
@@ -162,17 +165,9 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         guard let player = audioPlayer, !isPlaying else { return }
 
         Task { @MainActor in
-            player.enableRate = true // Enable rate change
-            player.rate = playbackSpeed // Apply the set playback speed
             player.play()
+            player.rate = playbackSpeed
             isPlaying = true
-
-            // Update the current playback position with a timer
-            timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                guard let player = self?.audioPlayer else { return }
-
-                self?.updateCurrentTime(player.currentTime)
-            }
         }
     }
     
@@ -183,16 +178,15 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         Task { @MainActor in
             audioPlayer?.pause()
             isPlaying = false
-            timer?.invalidate()
         }
     }
     
     // Stop playback
     func stopPlayback() {
         Task { @MainActor in
-            audioPlayer?.stop()
+            audioPlayer?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
+            audioPlayer?.pause()
             isPlaying = false
-            timer?.invalidate()
             updateCurrentTime(0)
         }
     }
@@ -205,7 +199,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
         Task { @MainActor [self] in
             let targetTime = position * duration
-            player.currentTime = targetTime
+            player.seek(to: .init(seconds: targetTime, preferredTimescale: 1000), toleranceBefore: .zero, toleranceAfter: .zero)
             updateCurrentTime(targetTime)
         }
     }
@@ -216,11 +210,11 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
         Task { @MainActor [self] in
             // Move relative to the current position
-            var newTime = player.currentTime + seconds
+            var newTime = player.currentTime().seconds + seconds
             // Restrict range
             newTime = max(0, min(duration, newTime))
             // Perform seek
-            player.currentTime = newTime
+            player.seek(to: .init(seconds: newTime, preferredTimescale: 1000), toleranceBefore: .zero, toleranceAfter: .zero)
             updateCurrentTime(newTime)
         }
     }
@@ -256,30 +250,13 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
 
-    func saveTranscription(to url: URL) {
-        guard !transcribedSegments.isEmpty else { return }
-
-        Task { @MainActor [self] in
-            var text = ""
-            for segment in transcribedSegments {
-                let timeStr = formatTime(segment.startTime)
-                text += "[\(timeStr)] \(segment.text)\n"
-            }
-            do {
-                try text.write(to: url, atomically: true, encoding: .utf8)
-            } catch {
-                print("error: failed to save: \(error.localizedDescription)")
-            }
-        }
-    }
-
     func playFromSegment(_ segment: TranscriptSegment) {
         guard let player = audioPlayer else { return }
 
         Task { @MainActor [self] in
             currentSegmentID = segment.id
             // Seek to the segment's start time
-            player.currentTime = segment.startTime
+            player.seek(to: .init(seconds: segment.startTime, preferredTimescale: 1000), toleranceBefore: .zero, toleranceAfter: .zero)
             updateCurrentTime(segment.startTime)
             // Start playback
             startPlayback()
@@ -335,7 +312,9 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         forceAutoScrollEnabled = true
         forceAutoScrollDurationTimer?.invalidate()
         forceAutoScrollDurationTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
-            self?.forceAutoScrollEnabled = false
+            Task { @MainActor in
+                self?.forceAutoScrollEnabled = false
+            }
         }
     }
 
@@ -372,8 +351,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                     }
                     // Process if file URL is obtained
                     if let url = fileURL {
-                        // Check if it's an audio file
-                        let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
+                        let supportedFormats = SupportMediaType.allCases.map { $0.rawValue }
                         if supportedFormats.contains(url.pathExtension.lowercased()) {
                             Task { @MainActor in
                                 await self.loadAudioFile(url: url)
@@ -391,12 +369,30 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     func setPlaybackSpeed(_ speed: Float) {
         playbackSpeed = speed // Always update the desired speed
         if let player = audioPlayer {
-            player.enableRate = true // Ensure rate change is enabled
-            player.rate = speed // Apply immediately if player exists
+            player.rate = speed
+            // pause if do not want to play automatically
+            if !isPlaying {
+                player.pause()
+            }
         }
     }
 
     // MARK: - Private Functions
+    
+    private func startObserving() {
+        // every 10ms
+        let interval = CMTime(value: 1, timescale: 10)
+        timeObserver = audioPlayer?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+            Task { @MainActor in
+                self?.updateCurrentTime(time.seconds)
+            }
+        }
+        NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime, object: audioPlayer?.currentItem)
+            .sink { [weak self] _ in
+                self?.stopPlayback()
+            }
+            .store(in: &cancellables)
+    }
 
     // Reset transcription
     private func resetTranscription() {
@@ -408,7 +404,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     private func updateCurrentTime(_ time: TimeInterval) {
         currentTime = time
         playbackProgress = time / duration
-        
         // Update current segment
         updateCurrentSegment(for: time)
     }
@@ -457,16 +452,15 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     private func loadAudioPlayer(with url: URL) async throws {
         do {
             let currentSpeed = audioPlayer?.rate ?? 1.0
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.rate = currentSpeed // Maintain playback speed
-            audioPlayer?.prepareToPlay()
-            
-            guard let duration = audioPlayer?.duration else {
-                throw WhisperError.audioFileLoadFailed
-            }
+            let item = AVPlayerItem(url: url)
+            let duration = try await item.asset.load(.duration)
+            audioPlayer = AVPlayer(playerItem: item)
+            audioPlayer?.rate = currentSpeed
+            audioPlayer?.pause()
+            startObserving()
             
             Task { @MainActor in
-                self.duration = duration
+                self.duration = duration.seconds
                 self.audioFile = url
                 self.isFileLoaded = true
             }

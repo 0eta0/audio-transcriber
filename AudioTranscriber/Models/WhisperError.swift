@@ -8,6 +8,7 @@ enum WhisperError: Error {
     case transcriptionFailed
     case unsupportedModel
     case audioFileLoadFailed
+    case exportAudioFailed
 }
 
 extension WhisperError: LocalizedError {
@@ -27,6 +28,8 @@ extension WhisperError: LocalizedError {
             return L10n.WhisperError.unsupportedModel
         case .audioFileLoadFailed:
             return L10n.WhisperError.audioFileLoadFailed
+        case .exportAudioFailed:
+            return L10n.WhisperError.audioExportFailed
         }
     }
 }

@@ -15,8 +15,8 @@
 "SetupViewModel.changeModelErrorFormat" = "モデルの変更に失敗しました: %@";
 
 /* TranscriptionView */
-"TranscriptionView.selectAudioFile" = "音声ファイルを選択";
-"TranscriptionView.dropAudioFile" = "ここに音声ファイルをドロップ";
+"TranscriptionView.selectMediaFile" = "音声・動画ファイルを選択";
+"TranscriptionView.dropMediaFile" = "ここに音声・動画ファイルをドロップ";
 "TranscriptionView.transcribe" = "文字起こし";
 "TranscriptionView.transcribing" = "文字起こし中...";
 "TranscriptionView.errorTitle" = "エラー";
@@ -30,7 +30,7 @@
 "TranscriptionView.selectModel" = "モデル選択";
 "TranscriptionView.selectModelHelp" = "文字起こしモデルを選択";
 "TranscriptionView.retranscribe" = "再文字起こし";
-"TranscriptionView.retranscribeHelp" = "音声ファイルを再度文字起こしする";
+"TranscriptionView.retranscribeHelp" = "音声・動画ファイルを再度文字起こしする";
 "TranscriptionView.retranscribeConfirmationMessage" = "文字起こしを再実行しますか？現在の文字起こし結果は消去されます。";
 "TranscriptionView.retranscribeConfirmationButton" = "再実行";
 "TranscriptionView.saveAsTextFile" = "テキストファイルとして保存";
@@ -42,9 +42,9 @@
 "TranscriptionView.noTranscription" = "文字起こしがありません";
 "TranscriptionView.startTranscription" = "文字起こしを開始";
 "TranscriptionView.timeFormat" = "%d分%02d秒";
-"TranscriptionView.dragAndDropAudioFile" = "音声ファイルをドラッグ＆ドロップ";
+"TranscriptionView.dragAndDropMediaFile" = "音声・動画ファイルをドラッグ＆ドロップ";
 "TranscriptionView.or" = "または";
-"TranscriptionView.dropAudioFileHere" = "ここに音声ファイルをドロップ";
+"TranscriptionView.dropMediaFileHere" = "ここに音声・動画ファイルをドロップ";
 "TranscriptionView.fileSelectionErrorFormat" = "ファイル選択エラー: %@";
 "TranscriptionView.untitled" = "名称未設定";
 "TranscriptionView.searchPlaceholder" = "文字起こしを検索";
@@ -59,6 +59,7 @@
 "WhisperError.transcriptionFailed" = "文字起こし処理に失敗しました";
 "WhisperError.unsupportedModel" = "サポートされていないモデル名です";
 "WhisperError.audioFileLoadFailed" = "ファイルの読み込みに失敗しました";
+"WhisperError.audioExportFailed" = "動画ファイルから音声の書き出しに失敗しました";
 
 /* WhisperInitializeStatus */
 "WhisperInitializeStatus.uninitialized" = "WhisperKitが初期化されていません";

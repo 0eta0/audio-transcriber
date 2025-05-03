@@ -46,12 +46,12 @@ internal enum L10n {
   internal enum TranscriptionView {
     /// Copy
     internal static let copy = L10n.tr("Localizable", "TranscriptionView.copy", fallback: "Copy")
-    /// Drag & Drop Audio File
-    internal static let dragAndDropAudioFile = L10n.tr("Localizable", "TranscriptionView.dragAndDropAudioFile", fallback: "Drag & Drop Audio File")
-    /// Drop audio file here
-    internal static let dropAudioFile = L10n.tr("Localizable", "TranscriptionView.dropAudioFile", fallback: "Drop audio file here")
-    /// Drop audio file here
-    internal static let dropAudioFileHere = L10n.tr("Localizable", "TranscriptionView.dropAudioFileHere", fallback: "Drop audio file here")
+    /// Drag & Drop Media File
+    internal static let dragAndDropMediaFile = L10n.tr("Localizable", "TranscriptionView.dragAndDropMediaFile", fallback: "Drag & Drop Media File")
+    /// Drop audio media here
+    internal static let dropMediaFile = L10n.tr("Localizable", "TranscriptionView.dropMediaFile", fallback: "Drop audio media here")
+    /// Drop media file here
+    internal static let dropMediaFileHere = L10n.tr("Localizable", "TranscriptionView.dropMediaFileHere", fallback: "Drop media file here")
     /// Transcription failed: %@
     internal static func errorMessageFormat(_ p1: Any) -> String {
       return L10n.tr("Localizable", "TranscriptionView.errorMessageFormat", String(describing: p1), fallback: "Transcription failed: %@")
@@ -103,7 +103,7 @@ internal enum L10n {
     /// Search Transcription
     internal static let searchPlaceholder = L10n.tr("Localizable", "TranscriptionView.searchPlaceholder", fallback: "Search Transcription")
     /// TranscriptionView
-    internal static let selectAudioFile = L10n.tr("Localizable", "TranscriptionView.selectAudioFile", fallback: "Select Audio File")
+    internal static let selectMediaFile = L10n.tr("Localizable", "TranscriptionView.selectMediaFile", fallback: "Select Media File")
     /// Select Model
     internal static let selectModel = L10n.tr("Localizable", "TranscriptionView.selectModel", fallback: "Select Model")
     /// Select transcription model
@@ -124,6 +124,8 @@ internal enum L10n {
     internal static let untitled = L10n.tr("Localizable", "TranscriptionView.untitled", fallback: "untitled")
   }
   internal enum WhisperError {
+    /// Failed to export audio from video file
+    internal static let audioExportFailed = L10n.tr("Localizable", "WhisperError.audioExportFailed", fallback: "Failed to export audio from video file")
     /// Failed to load audio file
     internal static let audioFileLoadFailed = L10n.tr("Localizable", "WhisperError.audioFileLoadFailed", fallback: "Failed to load audio file")
     /// Failed to initialize Whisper

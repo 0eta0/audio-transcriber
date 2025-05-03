@@ -76,16 +76,37 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
     // Transcribe audio file
     func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment] {
         try await setupWhisperIfNeeded(modelName: currentModelName)
-        // Check file format
-        let fileExtension = url.pathExtension.lowercased()
-        let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
-        guard supportedFormats.contains(fileExtension) else {
-            throw WhisperError.unsupportedFormat
-        }
-        
         guard let whisperKit = whisperKit else {
             throw WhisperError.uninitialized
         }
+
+        let fileExtension = url.pathExtension.lowercased()
+        let supportedFormats = SupportMediaType.allCases.map { $0.rawValue }
+        guard supportedFormats.contains(fileExtension) else {
+            throw WhisperError.unsupportedFormat
+        }
+ 
+        var extractedAudioURL: URL?
+        // If the file is a video, extract audio
+        if isVideoFile(url: url) {
+            let f = UUID().uuidString + ".m4a"
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(f)
+            extractedAudioURL = tempURL
+            do {
+                try await extractAudio(from: url, to: tempURL)
+            } catch {
+                try? FileManager.default.removeItem(at: tempURL)
+                throw WhisperError.exportAudioFailed
+            }
+        }
+        // Clean up temporary audio file
+        defer {
+            if let url = extractedAudioURL {
+                try? FileManager.default.removeItem(at: url)
+            }
+        }
+        
+        let url = extractedAudioURL ?? url
         // Get audio file duration
         let audioDuration = try await getAudioDuration(for: url)
         // Execute transcription process
@@ -99,11 +120,29 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
     // MARK: Private Functions
     
+    private func isVideoFile(url: URL) -> Bool {
+        return SupportMediaType.allVideoTypes
+            .map({ $0.rawValue })
+            .contains(url.pathExtension.lowercased())
+    }
+    
     // Get audio file duration
     private func getAudioDuration(for url: URL) async throws -> TimeInterval {
-        // Regular audio file
-        let audioPlayer = try AVAudioPlayer(contentsOf: url)
-        return audioPlayer.duration
+        let asset = AVAsset(url: url)
+        let duration = try await asset.load(.duration)
+        return duration.seconds
+    }
+    
+    private func extractAudio(from videoURL: URL, to audioURL: URL) async throws {
+        let asset = AVAsset(url: videoURL)
+        let duration = try await asset.load(.duration)
+        guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
+            throw WhisperError.exportAudioFailed
+        }
+        session.outputFileType = .m4a
+        session.outputURL = audioURL
+        session.timeRange = CMTimeRange(start: .zero, duration: duration)
+        await session.export()
     }
 
     // Execute transcription (using WhisperKit)
@@ -170,7 +209,6 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             let range = NSRange(location: 0, length: text.utf16.count)
             return regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "")
         } catch {
-            print("error: regex: \(error.localizedDescription)")
             return text
         }
     }
