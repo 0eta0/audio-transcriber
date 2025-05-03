@@ -1,18 +1,32 @@
 import Foundation
 import SwiftUICore
 
-enum SetupStatusType {
-    case waitingSelection(description: String)
+enum SetupStatusType: Equatable {
+    case waitingSelection
     case changing(description: String, status: WhisperInitializeStatus)
     case error(description: String)
-    case completed(description: String)
+    case completed
+
+    static func == (lhs: SetupStatusType, rhs: SetupStatusType) -> Bool {
+        switch (lhs, rhs) {
+        case (.waitingSelection, .waitingSelection):
+            return true
+        case let (.changing(lhsDescription, lhsStatus), .changing(rhsDescription, rhsStatus)):
+            return lhsDescription == rhsDescription && lhsStatus == rhsStatus
+        case let (.error(lhsDescription), .error(rhsDescription)):
+            return lhsDescription == rhsDescription
+        case (.completed, .completed):
+            return true
+        default:
+            return false
+        }
+    }
 
     var description: String {
         switch self {
-        case .waitingSelection(let description),
-                .changing(let description, _),
-                .error(let description),
-                .completed(let description):
+        case .waitingSelection, .completed:
+            return ""
+        case .changing(let description, _), .error(let description):
             return description
         }
     }
@@ -46,7 +60,7 @@ final class SetupViewModel: SetupViewModelType {
 
     // MARK: Initializers
 
-    init(whisperManager: WhisperManagerType, status: SetupStatusType = .waitingSelection(description: "モデルを選択してください")) {
+    init(whisperManager: WhisperManagerType, status: SetupStatusType = .waitingSelection) {
         self.whisperManager = whisperManager
 
         self.status = status
@@ -57,7 +71,7 @@ final class SetupViewModel: SetupViewModelType {
 
     func changeModel() {
         Task { @MainActor in
-            let changingDescription = "\(selectedModel)\nに変更しています..."
+            let changingDescription = L10n.SetupViewModel.changingDescriptionFormat(selectedModel)
             status = .changing(description: changingDescription, status: .uninitialized)
             do {
                 try await whisperManager.setupWhisperIfNeeded(modelName: selectedModel, progressCallback: { [weak self] progress in
@@ -67,9 +81,9 @@ final class SetupViewModel: SetupViewModelType {
                         self.status = .changing(description: changingDescription, status: progress)
                     }
                 })
-                status = .completed(description: "\(selectedModel)\nモデルの変更が完了しました")
+                status = .completed
             } catch {
-                status = .error(description: "モデルの変更に失敗しました: \(error.localizedDescription)")
+                status = .error(description: L10n.SetupViewModel.changeModelErrorFormat(error.localizedDescription))
             }
         }
     }

@@ -14,19 +14,19 @@ extension WhisperError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fileNotFound:
-            return "ファイルが見つかりませんでした"
+            return L10n.WhisperError.fileNotFound
         case .unsupportedFormat:
-            return "サポートされていないファイル形式です"
+            return L10n.WhisperError.unsupportedFormat
         case .failedToInitialize:
-            return "Whisperの初期化に失敗しました"
+            return L10n.WhisperError.failedToInitialize
         case .uninitialized:
-            return "Whisperが初期化されていません"
+            return L10n.WhisperError.uninitialized
         case .transcriptionFailed:
-            return "文字起こし処理に失敗しました"
+            return L10n.WhisperError.transcriptionFailed
         case .unsupportedModel:
-            return "サポートされていないモデル名です"
+            return L10n.WhisperError.unsupportedModel
         case .audioFileLoadFailed:
-            return "ファイルの読み込みに失敗しました"
+            return L10n.WhisperError.audioFileLoadFailed
         }
     }
 }

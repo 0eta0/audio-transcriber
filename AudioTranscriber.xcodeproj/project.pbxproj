@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -42,6 +42,10 @@
 		FCF01A122B8E1E8A00F12345 /* TranscriptionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionViewModel.swift; sourceTree = "<group>"; };
 		FCF01A152B8E1E9A00F12345 /* WhisperManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		6612B1E72DC5282100FB7B5D /* Resources */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Resources; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		FCF019FA2B8E1E5000F12345 /* Frameworks */ = {
@@ -100,6 +104,7 @@
 		FCF019FF2B8E1E5000F12345 /* AudioTranscriber */ = {
 			isa = PBXGroup;
 			children = (
+				6612B1E72DC5282100FB7B5D /* Resources */,
 				FCF01A042B8E1E5200F12345 /* Assets.xcassets */,
 				FCF01A092B8E1E5200F12345 /* AudioTranscriber.entitlements */,
 				FCF01A002B8E1E5000F12345 /* AudioTranscriberApp.swift */,
@@ -156,6 +161,9 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				6612B1E72DC5282100FB7B5D /* Resources */,
+			);
 			name = AudioTranscriber;
 			productName = AudioTranscriber;
 			productReference = FCF019FD2B8E1E5000F12345 /* AudioTranscriber.app */;
@@ -182,7 +190,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
+				ja,
 			);
 			mainGroup = FCF019F42B8E1E5000F12345;
 			packageReferences = (

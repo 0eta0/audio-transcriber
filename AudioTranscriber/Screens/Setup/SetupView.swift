@@ -10,51 +10,67 @@ struct SetupView<ViewModel: SetupViewModelType>: View {
     // MARK: Lifecycle
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text("音声文字起こしモデルの変更")
-                .font(.title)
-                .padding(.top, 24)
-                .padding(.leading, 24)
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 20) {
+                Text(L10n.SetupView.title)
+                    .font(.title)
+                    .padding(.top, 24)
+                    .padding(.leading, 24)
 
-            Text("文字起こしに使用するWhisperモデルを変更できます。\nモデルによって精度と処理速度が異なります。")
-                .multilineTextAlignment(.center)
+                Text(L10n.SetupView.description)
+                    .multilineTextAlignment(.center)
 
-            Divider()
-                .padding(.vertical, 4)
+                Divider()
+                    .padding(.vertical, 4)
 
-            VStack {
-                switch viewModel.status {
-                case .waitingSelection(let description):
-                    SelectionView(
-                        selectedModel: $viewModel.selectedModel,
-                        currentModel: viewModel.currentModel,
-                        description: description,
-                        supportedModels: viewModel.supportedModels
-                    ) {
-                        viewModel.changeModel()
-                    }
-                case .changing(let description, let status):
-                    LoadingView(description: description, status: status)
-                case .error(let description):
-                    ErrorView(description: description) {
-                        viewModel.changeModel()
-                    }
-                case .completed(let description):
-                    CompletionView(description: description) {
-                        showSetupModal = false
+                VStack {
+                    switch viewModel.status {
+                    case .waitingSelection:
+                        SelectionView(
+                            selectedModel: $viewModel.selectedModel,
+                            currentModel: viewModel.currentModel,
+                            supportedModels: viewModel.supportedModels
+                        ) {
+                            viewModel.changeModel()
+                        }
+                    case .changing(let description, let status):
+                        LoadingView(description: description, status: status)
+                    case .error(let description):
+                        ErrorView(description: description) {
+                            viewModel.changeModel()
+                        }
+                    case .completed:
+                        CompletionView {
+                            showSetupModal = false
+                        }
                     }
                 }
+                .padding(.all, 24)
+                .background(Color(NSColor.controlBackgroundColor))
+                .cornerRadius(8)
+                .padding(.all, 24)
             }
-            .padding(.all, 24)
-            .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(8)
+            .onChange(of: viewModel.status) { _, value in
+                if value == .completed {
+                    showSetupModal = false
+                }
+            }
+
+            Button {
+                showSetupModal = false
+            } label: {
+                Image(systemName: "xmark")
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+            .padding([.top, .trailing], 16)
         }
     }
 }
 
 // MARK: - Component Views
 
-struct SelectionView: View {
+private struct SelectionView: View {
 
     // MARK: Properties
 
@@ -62,7 +78,6 @@ struct SelectionView: View {
 
     var currentModel: String
 
-    let description: String
     let supportedModels: [String]
     let changeAction: () -> Void
 
@@ -70,22 +85,17 @@ struct SelectionView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text(description)
-                .font(.headline)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-
-            Text("現在のモデル: \(currentModel)")
+            Text(L10n.SetupView.currentModelLabel(currentModel))
                 .padding(.top, 5)
 
-            Picker("モデルの選択", selection: $selectedModel) {
+            Picker("", selection: $selectedModel) {
                 ForEach(supportedModels, id: \.self) { model in
                     Text(model).tag(model)
                 }
             }
             .frame(width: 320)
 
-            Button("モデルを変更", action: changeAction)
+            Button(L10n.SetupView.changeModelButton, action: changeAction)
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .padding(.top, 10)
@@ -93,7 +103,7 @@ struct SelectionView: View {
     }
 }
 
-struct LoadingView: View {
+private struct LoadingView: View {
 
     // MARK: Properties
 
@@ -118,7 +128,7 @@ struct LoadingView: View {
     }
 }
 
-struct ErrorView: View {
+private struct ErrorView: View {
 
     // MARK: Properties
 
@@ -134,38 +144,30 @@ struct ErrorView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            Button("再試行", action: retryAction)
+            Button(L10n.Common.retryButton, action: retryAction)
                 .buttonStyle(.borderedProminent)
                 .padding(.top)
         }
     }
 }
 
-struct CompletionView: View {
+private struct CompletionView: View {
 
     // MARK: Properties
 
-    let description: String
     let dismissAction: () -> Void
 
     // MARK: Lifecycle
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text(description)
-                .font(.headline)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-
-            Button("アプリに戻る", action: dismissAction)
-                .buttonStyle(.borderedProminent)
-                .padding()
-        }
+        Button(L10n.Common.backToAppButton, action: dismissAction)
+            .buttonStyle(.borderedProminent)
+            .padding()
     }
 }
 
 #Preview {
-    let vm = SetupViewModel(whisperManager: WhisperManager(), status: .waitingSelection(description: "ステータスの表示"))
+    let vm = SetupViewModel(whisperManager: WhisperManager(), status: .waitingSelection)
     SetupView(viewModel: vm, showSetupModal: .constant(true))
         .frame(width: 550, height: 400)
         .background(Color(NSColor.windowBackgroundColor))

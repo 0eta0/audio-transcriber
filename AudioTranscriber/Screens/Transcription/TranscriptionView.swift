@@ -7,19 +7,12 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 
     @Environment(\.dependency) private var dependency
 
-    @StateObject private var viewModel: ViewModel
+    @StateObject var viewModel: ViewModel
     
     @State private var isFilePickerPresented = false
     @State private var showingAlert = false
     @State private var alertMessage = ""
-    @State private var isDraggingOver = false
     @State private var showSetupModal = true
-
-    // MARK: Initializer
-
-    init(viewModel: ViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
 
     // MARK: Lifecycle
 
@@ -52,15 +45,12 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                     FileLoadingPromptView(
                         showSetupModal: $showSetupModal,
                         isFilePickerPresented: $isFilePickerPresented,
-                        isDraggingOver: $isDraggingOver
+                        viewModel: viewModel
                     )
                 }
             }
             .alert(alertMessage, isPresented: $showingAlert) {
-                Button("OK", role: .cancel) {}
-            }
-            .onDrop(of: [.audio], isTargeted: $isDraggingOver) { providers in
-                viewModel.handleDrop(providers: providers)
+                Button(L10n.Common.okButton, role: .cancel) {}
             }
             .sheet(isPresented: $showSetupModal) {
                 let setupViewModel = SetupViewModel(whisperManager: dependency.whisperManager)
@@ -80,7 +70,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                         await viewModel.loadAudioFile(url: url)
                     }
                 case .failure(let error):
-                    alertMessage = "ファイル選択エラー: \(error.localizedDescription)"
+                    alertMessage = error.localizedDescription
                     showingAlert = true
                 }
             }
@@ -93,39 +83,26 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 // MARK: - Subviews
 
 // ツールバーコンポーネント
-struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
+private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
 
-    @ObservedObject private var viewModel: ViewModel
+    @ObservedObject var viewModel: ViewModel
 
     @Binding var isFilePickerPresented: Bool
     @Binding var showingAlert: Bool
     @Binding var alertMessage: String
+    @Binding var showSetupModal: Bool
+
     @State private var showingSavePanel = false
     @State private var showingResetConfirmation = false
-    @Binding var showSetupModal: Bool
     @State private var showingRetranscribeConfirmation = false
-
-    // MARK: Initializer
-
-    init(viewModel: ViewModel,
-            isFilePickerPresented: Binding<Bool>,
-            showingAlert: Binding<Bool>,
-            alertMessage: Binding<String>,
-         showSetupModal: Binding<Bool>) {
-        self.viewModel = viewModel
-        self._isFilePickerPresented = isFilePickerPresented
-        self._showingAlert = showingAlert
-        self._alertMessage = alertMessage
-        self._showSetupModal = showSetupModal
-    }
 
     // MARK: Lifecycle
     
     var body: some View {
         HStack {
-            Text(viewModel.audioFile?.lastPathComponent ?? "untitled")
+            Text(viewModel.audioFile?.lastPathComponent ?? L10n.TranscriptionView.untitled)
                 .font(.headline)
                 .lineLimit(1)
             Spacer()
@@ -133,34 +110,34 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
             Button(action: {
                 showSetupModal = true
             }) {
-                Label("モデル選択", systemImage: "brain")
+                Label(L10n.TranscriptionView.selectModel, systemImage: "brain")
             }
-            .help("文字起こしモデルを選択")
+            .help(L10n.TranscriptionView.selectModelHelp)
             .buttonStyle(.bordered)
             
             if !viewModel.transcribedSegments.isEmpty {
                 Button(action: {
                     showingRetranscribeConfirmation = true
                 }) {
-                    Label("再文字起こし", systemImage: "arrow.triangle.2.circlepath")
+                    Label(L10n.TranscriptionView.retranscribe, systemImage: "arrow.triangle.2.circlepath")
                 }
-                .help("音声ファイルを再度文字起こしする")
+                .help(L10n.TranscriptionView.retranscribeHelp)
                 .buttonStyle(.bordered)
                 .confirmationDialog(
-                    "文字起こしを再実行しますか？現在の文字起こし結果は消去されます。",
+                    L10n.TranscriptionView.retranscribeConfirmationMessage,
                     isPresented: $showingRetranscribeConfirmation,
                     titleVisibility: .visible
                 ) {
-                    Button("再実行", role: .destructive) {
+                    Button(L10n.TranscriptionView.retranscribeConfirmationButton, role: .destructive) {
                         viewModel.retranscribeAudio()
                     }
-                    Button("キャンセル", role: .cancel) {}
+                    Button(L10n.Common.cancelButton, role: .cancel) {}
                 }
                 
                 Button(action: {
                     showingSavePanel = true
                 }) {
-                    Label("テキストファイルとして保存", systemImage: "arrow.down.doc")
+                    Label(L10n.TranscriptionView.saveAsTextFile, systemImage: "arrow.down.doc")
                 }
                 .buttonStyle(.borderedProminent)
                 .fileExporter(
@@ -171,10 +148,10 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
                 ) { result in
                     switch result {
                     case .success:
-                        alertMessage = "ファイルの保存に成功しました"
+                        alertMessage = L10n.TranscriptionView.exportSuccessMessage
                         showingAlert = true
                     case .failure(let error):
-                        alertMessage = "ファイルの保存に失敗しました: \(error.localizedDescription)"
+                        alertMessage = L10n.TranscriptionView.exportErrorMessageFormat(error.localizedDescription)
                         showingAlert = true
                     }
                 }
@@ -183,17 +160,17 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
             Button(action: {
                 showingResetConfirmation = true
             }) {
-                Label("リセット", systemImage: "arrow.counterclockwise")
+                Label(L10n.TranscriptionView.reset, systemImage: "arrow.counterclockwise")
             }
             .confirmationDialog(
-                "ファイルと文字起こしをリセットしますか？",
+                L10n.TranscriptionView.resetConfirmationMessage,
                 isPresented: $showingResetConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("リセット", role: .destructive) {
+                Button(L10n.TranscriptionView.resetConfirmationButton, role: .destructive) {
                     viewModel.resetAll()
                 }
-                Button("キャンセル", role: .cancel) {}
+                Button(L10n.Common.cancelButton, role: .cancel) {}
             }
             .keyboardShortcut("r", modifiers: [.command, .shift])
         }
@@ -204,15 +181,11 @@ struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
 }
 
 // オーディオプレーヤーコンポーネント
-struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
+private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
 
-    @ObservedObject private var viewModel: ViewModel
-
-    init(viewModel: ViewModel) {
-        self.viewModel = viewModel
-    }
+    @ObservedObject var viewModel: ViewModel
 
     // MARK: Lifecycle
     
@@ -282,22 +255,16 @@ struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
-        return String(format: "%d:%02d", minutes, seconds)
+        return L10n.TranscriptionView.timeFormat(minutes, seconds)
     }
 }
 
 // 文字起こし表示コンポーネント
-struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
+private struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
 
-    @ObservedObject private var viewModel: ViewModel
-
-    // MARK: Initializer
-
-    init(viewModel: ViewModel) {
-        self.viewModel = viewModel
-    }
+    @ObservedObject var viewModel: ViewModel
 
     // MARK: Lifecycle
     
@@ -321,7 +288,7 @@ struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
                             scrollView.scrollTo(viewModel.currentSegmentID, anchor: .center)
                         }
                     }) {
-                        Label("現在の場所を表示", systemImage: "text.insert")
+                        Label(L10n.TranscriptionView.showCurrentLocation, systemImage: "text.insert")
                             .padding(8)
                             .background(Color(NSColor.controlBackgroundColor))
                             .cornerRadius(8)
@@ -344,17 +311,11 @@ struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
 }
 
 // 文字起こしがない場合の表示
-struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: View {
+private struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
 
-    @ObservedObject private var viewModel: ViewModel
-
-    // MARK: Initializer
-
-    init(viewModel: ViewModel) {
-        self.viewModel = viewModel
-    }
+    @ObservedObject var viewModel: ViewModel
 
     // MARK: Lifecycle
     
@@ -364,7 +325,7 @@ struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                 VStack {
                     ProgressView()
                         .scaleEffect(1.2)
-                    Text("文字起こしを処理中...")
+                    Text(L10n.TranscriptionView.transcribing)
                         .padding(.top)
                     
                     // Progress bar to show transcription progress
@@ -392,11 +353,11 @@ struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                     .padding(.horizontal, 20)
                 }
             } else {
-                Text("文字起こしがありません")
+                Text(L10n.TranscriptionView.noTranscription)
                     .foregroundColor(.secondary)
                 
                 if viewModel.isFileLoaded, let _ = viewModel.audioFile {
-                    Button("文字起こしを開始") {
+                    Button(L10n.TranscriptionView.startTranscription) {
                         viewModel.transcribeAudio()
                     }
                     .buttonStyle(.borderedProminent)
@@ -413,23 +374,18 @@ struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: View {
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
-        return String(format: "%d:%02d", minutes, seconds)
+        return L10n.TranscriptionView.timeFormat(minutes, seconds)
     }
 }
 
 // 文字起こしリスト表示
-struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
+private struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
 
-    @ObservedObject private var viewModel: ViewModel
+    @ObservedObject var viewModel: ViewModel
+
     @State private var previousOffset: CGFloat = 0
-
-    // MARK: Initializer
-
-    init(viewModel: ViewModel) {
-        self.viewModel = viewModel
-    }
 
     // MARK: Lifecycle
 
@@ -467,7 +423,7 @@ struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
 }
 
 
-struct OffsetPreferenceKey: PreferenceKey {
+private struct OffsetPreferenceKey: PreferenceKey {
 
     typealias Value = CGFloat
 
@@ -478,30 +434,8 @@ struct OffsetPreferenceKey: PreferenceKey {
     }
 }
 
-// ドラッグオーバーレイ表示
-struct DragOverlayView: View {
-
-    // MARK: Lifecycle
-    
-    var body: some View {
-        RoundedRectangle(cornerRadius: 10)
-            .stroke(Color.accentColor, lineWidth: 2)
-            .background(Color.accentColor.opacity(0.1))
-            .overlay(
-                VStack {
-                    Image(systemName: "waveform")
-                        .font(.largeTitle)
-                    Text("ここに音声ファイルをドロップ")
-                        .font(.headline)
-                }
-                .foregroundColor(.accentColor)
-            )
-            .padding(20)
-    }
-}
-
 // 文字起こしのセグメント表示用ビュー
-struct TranscriptSegmentView: View {
+private struct TranscriptSegmentView: View {
 
     // MARK: Properties
     
@@ -536,18 +470,19 @@ struct TranscriptSegmentView: View {
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
-        return String(format: "%d分%02d秒", minutes, seconds)
+        return L10n.TranscriptionView.timeFormat(minutes, seconds)
     }
 }
 
 // ファイル読み込み前の初期画面
-struct FileLoadingPromptView: View {
-
+private struct FileLoadingPromptView<ViewModel: TranscriptionViewModelType>: View {
+    
     // MARK: Properties
 
     @Binding var showSetupModal: Bool
     @Binding var isFilePickerPresented: Bool
-    @Binding var isDraggingOver: Bool
+    @ObservedObject var viewModel: ViewModel
+    @State private var isDraggingOver = false
 
     // MARK: Lifecycle
     
@@ -558,13 +493,16 @@ struct FileLoadingPromptView: View {
             } else {
                 VStack {
                     audioInputView()
-
                     changeModel()
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(NSColor.windowBackgroundColor))
+        .onDrop(of: [.audio], isTargeted: $isDraggingOver) { providers in
+            _ = viewModel.handleDrop(providers: providers)
+            return true
+        }
     }
 
     // MARK: Private Functions
@@ -575,17 +513,17 @@ struct FileLoadingPromptView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.accentColor)
 
-            Text("音声ファイルをドラッグ＆ドロップ")
+            Text(L10n.TranscriptionView.dragAndDropAudioFile)
                 .font(.title2)
                 .fontWeight(.medium)
 
-            Text("または")
+            Text(L10n.TranscriptionView.or)
                 .foregroundColor(.secondary)
 
             Button(action: {
                 isFilePickerPresented = true
             }) {
-                Label("音声ファイルを選択", systemImage: "folder")
+                Label(L10n.TranscriptionView.selectAudioFile, systemImage: "folder")
                     .padding()
                     .frame(minWidth: 200)
             }
@@ -605,9 +543,31 @@ struct FileLoadingPromptView: View {
         Button(action: {
             showSetupModal = true
         }) {
-            Label("モデル選択", systemImage: "brain")
+            Label(L10n.TranscriptionView.selectModel, systemImage: "brain")
         }
-        .help("文字起こしモデルを選択")
+        .help(L10n.TranscriptionView.selectModelHelp)
         .buttonStyle(.bordered)
+    }
+}
+
+// ドラッグオーバーレイ表示
+private struct DragOverlayView: View {
+
+    // MARK: Lifecycle
+    
+    var body: some View {
+        RoundedRectangle(cornerRadius: 10)
+            .stroke(Color.accentColor, lineWidth: 2)
+            .background(Color.accentColor.opacity(0.1))
+            .overlay(
+                VStack {
+                    Image(systemName: "waveform")
+                        .font(.largeTitle)
+                    Text(L10n.TranscriptionView.dropAudioFileHere)
+                        .font(.headline)
+                }
+                .foregroundColor(.accentColor)
+            )
+            .padding(20)
     }
 }

@@ -1,0 +1,65 @@
+/* Common */
+"Common.retryButton" = "Retry";
+"Common.backToAppButton" = "Back to App";
+"Common.cancelButton" = "Cancel";
+"Common.okButton" = "OK";
+
+/* SetupView */
+"SetupView.title" = "Change Audio Transcription Model";
+"SetupView.description" = "You can change the Whisper model used for transcription.\nAccuracy and processing speed vary depending on the model.";
+"SetupView.currentModelLabel" = "Current Model: %@";
+"SetupView.changeModelButton" = "Change Model";
+
+/* SetupViewModel */
+"SetupViewModel.changingDescriptionFormat" = "Changing to %@...";
+"SetupViewModel.changeModelErrorFormat" = "Failed to change model: %@";
+
+/* TranscriptionView */
+"TranscriptionView.selectAudioFile" = "Select Audio File";
+"TranscriptionView.dropAudioFile" = "Drop audio file here";
+"TranscriptionView.transcribe" = "Transcribe";
+"TranscriptionView.transcribing" = "Transcribing...";
+"TranscriptionView.errorTitle" = "Error";
+"TranscriptionView.errorMessageFormat" = "Transcription failed: %@";
+"TranscriptionView.copy" = "Copy";
+"TranscriptionView.export" = "Export";
+"TranscriptionView.exportErrorTitle" = "Export Error";
+"TranscriptionView.exportErrorMessage" = "Failed to export the file.";
+"TranscriptionView.exportSuccessTitle" = "Export Successful";
+"TranscriptionView.exportSuccessMessage" = "The file has been exported successfully.";
+"TranscriptionView.selectModel" = "Select Model";
+"TranscriptionView.selectModelHelp" = "Select transcription model";
+"TranscriptionView.retranscribe" = "Retranscribe";
+"TranscriptionView.retranscribeHelp" = "Retranscribe the audio file";
+"TranscriptionView.retranscribeConfirmationMessage" = "Do you want to re-run the transcription? The current transcription result will be erased.";
+"TranscriptionView.retranscribeConfirmationButton" = "Retranscribe";
+"TranscriptionView.saveAsTextFile" = "Save as Text File";
+"TranscriptionView.exportErrorMessageFormat" = "Failed to save the file: %@";
+"TranscriptionView.reset" = "Reset";
+"TranscriptionView.resetConfirmationMessage" = "Do you want to reset the file and transcription?";
+"TranscriptionView.resetConfirmationButton" = "Reset";
+"TranscriptionView.showCurrentLocation" = "Show Current Location";
+"TranscriptionView.noTranscription" = "No transcription available";
+"TranscriptionView.startTranscription" = "Start Transcription";
+"TranscriptionView.timeFormat" = "%d min %02d sec";
+"TranscriptionView.dragAndDropAudioFile" = "Drag & Drop Audio File";
+"TranscriptionView.or" = "or";
+"TranscriptionView.dropAudioFileHere" = "Drop audio file here";
+"TranscriptionView.fileSelectionErrorFormat" = "File selection error: %@";
+"TranscriptionView.untitled" = "untitled";
+
+/* WhisperError */
+"WhisperError.fileNotFound" = "File not found";
+"WhisperError.unsupportedFormat" = "Unsupported file format";
+"WhisperError.failedToInitialize" = "Failed to initialize Whisper";
+"WhisperError.uninitialized" = "Whisper is not initialized";
+"WhisperError.transcriptionFailed" = "Transcription failed";
+"WhisperError.unsupportedModel" = "Unsupported model name";
+"WhisperError.audioFileLoadFailed" = "Failed to load audio file";
+
+/* WhisperInitializeStatus */
+"WhisperInitializeStatus.uninitialized" = "WhisperKit is not initialized";
+"WhisperInitializeStatus.checkingModel" = "Checking model...";
+"WhisperInitializeStatus.downloadingModelFormat" = "Downloading model... %@%%";
+"WhisperInitializeStatus.loadingModel" = "Loading model...";
+"WhisperInitializeStatus.ready" = "WhisperKit is ready";

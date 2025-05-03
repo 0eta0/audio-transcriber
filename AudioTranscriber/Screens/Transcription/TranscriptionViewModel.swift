@@ -215,7 +215,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                 if let result = result {
                     transcribedSegments = result
                 }
-            } catch let e as WhisperError {
+            } catch _ as WhisperError {
                 self.error = error
             } catch {
                 self.error = WhisperError.transcriptionFailed
