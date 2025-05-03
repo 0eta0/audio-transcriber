@@ -2,19 +2,23 @@ import Foundation
 import AVFoundation
 import Combine
 import SwiftUI
+import AVKit
 
 @MainActor
 protocol TranscriptionViewModelType: ObservableObject, Sendable {
 
     var autoScrollEnabled: Bool { get set }
 
-    var audioFile: URL? { get set }
+    var player: AVPlayer? { get }
+
+    var mediaFile: URL? { get set }
     var duration: TimeInterval { get set }
     var currentTime: TimeInterval { get set }
     var playbackProgress: Double { get set }
     var isPlaying: Bool { get set }
     var isFileLoaded: Bool { get set }
     var playbackSpeed: Float { get }
+    var isPlayingVideo: Bool { get set }
 
     var transcribedSegments: [TranscriptSegment] { get set }
     var isTranscribing: Bool { get set }
@@ -29,7 +33,7 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     var searchText: String { get set }
     var filteredSegments: [TranscriptSegment] { get }
 
-    func loadAudioFile(url: URL) async
+    func loadFile(url: URL) async
     func togglePlayback()
     func seekToPosition(_ position: Double)
     func seekRelative(seconds: Double)
@@ -49,8 +53,12 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // MARK: - Properties
 
-    // Audio file related
-    @Published var audioFile: URL?
+    // media file related
+    var player: AVPlayer?
+    var isPlayingVideo: Bool = false
+    private var timeObserver: Any?
+
+    @Published var mediaFile: URL?
     @Published var duration: TimeInterval = 0.0
     @Published var currentTime: TimeInterval = 0.0
     @Published var playbackProgress: Double = 0.0
@@ -72,10 +80,6 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // Search
     @Published var searchText: String = ""
-
-    // Audio processing related
-    private var audioPlayer: AVPlayer?
-    private var timeObserver: Any?
 
     // WhisperKit related
     private var whisperManager: WhisperManagerType?
@@ -121,8 +125,8 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // MARK: - Public Functions
 
-    // Load audio file
-    func loadAudioFile(url: URL) async {
+    // Load file
+    func loadFile(url: URL) async {
         Task { @MainActor in
             stopPlayback()
             resetTranscription()
@@ -136,7 +140,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                 }
                 
                 // Load audio player
-                try await loadAudioPlayer(with: tempURL)
+                try await loadPlayer(with: tempURL)
             } catch let error as WhisperError {
                 Task { @MainActor in
                     self.error = error
@@ -162,7 +166,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     
     // Start playback
     func startPlayback() {
-        guard let player = audioPlayer, !isPlaying else { return }
+        guard let player = player, !isPlaying else { return }
 
         Task { @MainActor in
             player.play()
@@ -176,7 +180,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         guard isPlaying else { return }
 
         Task { @MainActor in
-            audioPlayer?.pause()
+            player?.pause()
             isPlaying = false
         }
     }
@@ -184,8 +188,8 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     // Stop playback
     func stopPlayback() {
         Task { @MainActor in
-            audioPlayer?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
-            audioPlayer?.pause()
+            player?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
+            player?.pause()
             isPlaying = false
             updateCurrentTime(0)
         }
@@ -193,7 +197,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     
     // Seek to position
     func seekToPosition(_ position: Double) {
-        guard let player = audioPlayer else { return }
+        guard let player = player else { return }
 
         playbackProgress = position
 
@@ -206,7 +210,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     
     // Seek relative (move forward/backward)
     func seekRelative(seconds: Double) {
-        guard let player = audioPlayer else { return }
+        guard let player = player else { return }
 
         Task { @MainActor [self] in
             // Move relative to the current position
@@ -220,12 +224,12 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     }
 
     func transcribeAudio() {
-        guard let audioFileURL = audioFile, !isTranscribing else { return }
+        guard let mediaFileURL = mediaFile, !isTranscribing else { return }
 
         Task { @MainActor [self] in
             isTranscribing = true
             do {
-                let result = try await self.whisperManager?.transcribe(url: audioFileURL) { [weak self] progress in
+                let result = try await self.whisperManager?.transcribe(url: mediaFileURL) { [weak self] progress in
                     guard let self = self else { return }
                     Task { @MainActor in
                         self.transcribingProgress = progress
@@ -251,7 +255,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     }
 
     func playFromSegment(_ segment: TranscriptSegment) {
-        guard let player = audioPlayer else { return }
+        guard let player = player else { return }
 
         Task { @MainActor [self] in
             currentSegmentID = segment.id
@@ -284,7 +288,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         dateFormatter.dateFormat = "yyyy-MM-dd-HHmm"
         let dateString = dateFormatter.string(from: Date())
         
-        if let fileName = audioFile?.lastPathComponent.components(separatedBy: ".").first {
+        if let fileName = mediaFile?.lastPathComponent.components(separatedBy: ".").first {
             return "\(fileName)_stt_\(dateString).txt"
         } else {
             return "\(dateString).txt"
@@ -295,13 +299,13 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         Task { @MainActor in
             stopPlayback()
             resetTranscription()
-            audioFile = nil
+            mediaFile = nil
             duration = 0.0
             currentTime = 0.0
             playbackProgress = 0.0
             isFileLoaded = false
             transcribingProgress = 0
-            audioPlayer = nil
+            player = nil
         }
     }
 
@@ -354,7 +358,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                         let supportedFormats = SupportMediaType.allCases.map { $0.rawValue }
                         if supportedFormats.contains(url.pathExtension.lowercased()) {
                             Task { @MainActor in
-                                await self.loadAudioFile(url: url)
+                                await self.loadFile(url: url)
                             }
                         }
                     }
@@ -368,7 +372,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
     func setPlaybackSpeed(_ speed: Float) {
         playbackSpeed = speed // Always update the desired speed
-        if let player = audioPlayer {
+        if let player = player {
             player.rate = speed
             // pause if do not want to play automatically
             if !isPlaying {
@@ -382,12 +386,12 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     private func startObserving() {
         // every 10ms
         let interval = CMTime(value: 1, timescale: 10)
-        timeObserver = audioPlayer?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+        timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             Task { @MainActor in
                 self?.updateCurrentTime(time.seconds)
             }
         }
-        NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime, object: audioPlayer?.currentItem)
+        NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
             .sink { [weak self] _ in
                 self?.stopPlayback()
             }
@@ -448,24 +452,33 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         return tempURL
     }
     
-    // Load regular audio file
-    private func loadAudioPlayer(with url: URL) async throws {
+    // Load regular media file
+    private func loadPlayer(with url: URL) async throws {
         do {
-            let currentSpeed = audioPlayer?.rate ?? 1.0
-            let item = AVPlayerItem(url: url)
-            let duration = try await item.asset.load(.duration)
-            audioPlayer = AVPlayer(playerItem: item)
-            audioPlayer?.rate = currentSpeed
-            audioPlayer?.pause()
+            let currentSpeed = player?.rate ?? 1.0
+            let asset = AVURLAsset(url: url)
+            let item = AVPlayerItem(asset: asset)
+            let duration = try await asset.load(.duration)
+            isPlayingVideo = isVideoFile(url: url)
+
+            player = AVPlayer(playerItem: item)
+            player?.rate = currentSpeed
+            player?.pause()
             startObserving()
-            
+
             Task { @MainActor in
                 self.duration = duration.seconds
-                self.audioFile = url
+                self.mediaFile = url
                 self.isFileLoaded = true
             }
         } catch {
             throw WhisperError.audioFileLoadFailed
         }
+    }
+    
+    private func isVideoFile(url: URL) -> Bool {
+        return SupportMediaType.allVideoTypes
+            .map({ $0.rawValue })
+            .contains(url.pathExtension.lowercased())
     }
 }

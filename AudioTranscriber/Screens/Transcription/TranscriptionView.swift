@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import AVKit
 
 struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 
@@ -18,9 +19,8 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 
     var body: some View {
         if let dependency = dependency {
-            ZStack {
+            ZStack(alignment: .topTrailing) {
                 if viewModel.isFileLoaded {
-                    // Normal layout when a file is loaded
                     VStack(spacing: 0) {
                         ToolbarView(
                             viewModel: viewModel,
@@ -31,14 +31,18 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                         )
 
                         Divider()
-
-                        VStack(spacing: 0) {
+                        
+                        DraggableVideoPlayerArea {
                             TranscriptionContentView(viewModel: viewModel)
 
-                            Divider()
-
-                            AudioPlayerView(viewModel: viewModel)
+                            if (viewModel.isPlayingVideo) {
+                                DraggableVideoPlayer(viewModel: viewModel)
+                            }
                         }
+
+                        Divider()
+                        
+                        AudioPlayerView(viewModel: viewModel)
                     }
                 } else {
                     // Initial screen when no file is loaded
@@ -75,7 +79,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                         return
                     }
                     Task { @MainActor in
-                        await viewModel.loadAudioFile(url: url)
+                        await viewModel.loadFile(url: url)
                     }
                 case .failure(let error):
                     alertMessage = error.localizedDescription
@@ -89,6 +93,136 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 }
 
 // MARK: - Subviews
+
+private struct DraggableVideoPlayerArea<Content> : View where Content : View {
+    
+    @ViewBuilder var content: () -> Content
+    
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            content()
+        }
+        .coordinateSpace(.named("VideoPlayerArea"))
+    }
+}
+
+private struct DraggableVideoPlayer<ViewModel: TranscriptionViewModelType>: View {
+    
+    @ObservedObject var viewModel: ViewModel
+
+    // Offset that the player will be dragged
+    @State private var playerOffset: CGPoint = .zero
+    // Offset inside the player
+    @State private var insideOffset: CGPoint = .zero
+    // Size of the player
+    @State private var playerSize = CGSize(width: 240, height: 240 * 9 / 16)
+    // Size of the player when magnified
+    @State private var baseSize: CGSize = .zero
+    // Size of the area that allows dragging
+    @State private var areaSize = CGSize.zero
+
+    // margin around the player
+    private let padding: CGFloat = 16
+    // minimum width of the player
+    private let minVideoPlayerWidth: CGFloat = 120
+    // maximum width of the player
+    private var maxVideoPlayerWidth: CGFloat {
+        return areaSize.width - 2 * padding
+    }
+    
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                CustomVideoPlayer(player: viewModel.player)
+                
+                Color.clear
+                    .contentShape(Rectangle())
+            }
+            .frame(width: playerSize.width, height: playerSize.height)
+            .cornerRadius(8)
+            .onAppear {
+                areaSize = geo.size
+                playerOffset = CGPoint(
+                    x: geo.size.width - playerSize.width - padding,
+                    y: padding
+                )
+            }
+            .onChange(of: geo.size) { _, area in
+                areaSize = area
+                clampOffset()
+                clampSize()
+            }
+            .simultaneousGesture(
+                DragGesture(coordinateSpace: .named("VideoPlayerArea"))
+                    .onChanged { value in
+                        playerOffset = CGPoint(
+                            x: value.location.x - insideOffset.x,
+                            y: value.location.y - insideOffset.y
+                        )
+                    }
+            )
+            .simultaneousGesture(
+                DragGesture()
+                    .onChanged { value in
+                        insideOffset = value.startLocation
+                    }
+            )
+            .simultaneousGesture(
+                MagnifyGesture()
+                    .onChanged { value in
+                        if baseSize == .zero {
+                            baseSize = playerSize
+                        }
+                        playerSize = magnifySize(value.magnification)
+                        clampOffset()
+                    }
+                    .onEnded { value in
+                        baseSize = .zero
+                    }
+            )
+            .offset(x: playerOffset.x, y: playerOffset.y)
+        }
+    }
+    
+    private func magnifySize(_ value: CGFloat) -> CGSize {
+        let width = max(minVideoPlayerWidth, min(maxVideoPlayerWidth, baseSize.width * value))
+        let height = width * 9 / 16
+        return CGSize(width: width, height: height)
+    }
+    
+    private func clampOffset() {
+        let maxX = max(0, areaSize.width - playerSize.width - padding)
+        let maxY = max(0, areaSize.height - playerSize.height - padding)
+        playerOffset.x = clamp(playerOffset.x, padding, maxX)
+        playerOffset.y = clamp(playerOffset.y, padding, maxY)
+    }
+
+    private func clampSize() {
+        if playerSize.width > areaSize.width - 2 * padding || playerSize.height > areaSize.height - 2 * padding {
+            let w = min(playerSize.width, areaSize.width - 2 * padding, areaSize.height * 16 / 9 - 2 * padding)
+            playerSize = CGSize(width: w, height: w * 9 / 16)
+        }
+    }
+    
+    @inline(__always)
+    private func clamp<T: Comparable>(_ v: T, _ lo: T, _ hi: T) -> T {
+        min(max(v, lo), hi)
+    }
+}
+
+private struct CustomVideoPlayer : NSViewRepresentable {
+    
+    var player : AVPlayer?
+    
+    func makeNSView(context: Context) -> AVPlayerView {
+        let view = AVPlayerView()
+        view.controlsStyle = .none
+        view.player = player
+        return view
+    }
+    
+    func updateNSView(_ nsView: AVPlayerView, context: Context) {}
+}
 
 // Toolbar component
 private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
@@ -112,7 +246,7 @@ private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
     
     var body: some View {
         HStack {
-            Text(viewModel.audioFile?.lastPathComponent ?? L10n.TranscriptionView.untitled)
+            Text(viewModel.mediaFile?.lastPathComponent ?? L10n.TranscriptionView.untitled)
                 .font(.headline)
                 .lineLimit(1)
             
@@ -234,114 +368,115 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
     @ObservedObject var viewModel: ViewModel
     @State private var isDragging = false
     @State private var sliderPosition: CGFloat = 0
-    
+
     // Available playback speeds
     private let speedOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 
     // MARK: Lifecycle
-    
+
     var body: some View {
-        HStack(alignment: .center) {
-            Button(action: {
-                viewModel.togglePlayback()
-            }) {
-                Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .resizable()
-                    .frame(width: 40, height: 40)
-                    .foregroundColor(.accentColor)
-            }
-            .buttonStyle(.borderless)
-            .keyboardShortcut(.space, modifiers: [])
+            HStack(alignment: .center) {
+                Button(action: {
+                    viewModel.togglePlayback()
+                }) {
+                    Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .resizable()
+                        .frame(width: 40, height: 40)
+                        .foregroundColor(.accentColor)
+                }
+                .buttonStyle(.borderless)
+                .keyboardShortcut(.space, modifiers: [])
 
-            Spacer()
-                .frame(width: 16)
+                Spacer()
+                    .frame(width: 16)
 
-            Button(action: {
-                viewModel.seekRelative(seconds: -10)
-            }) {
-                Image(systemName: "gobackward.10")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 20, height: 20)
-            }
-            .buttonStyle(.borderless)
-            .keyboardShortcut(.leftArrow, modifiers: [])
+                Button(action: {
+                    viewModel.seekRelative(seconds: -10)
+                }) {
+                    Image(systemName: "gobackward.10")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.borderless)
+                .keyboardShortcut(.leftArrow, modifiers: [])
 
-            Button(action: {
-                viewModel.seekRelative(seconds: 10)
-            }) {
-                Image(systemName: "goforward.10")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 20, height: 20)
-            }
-            .buttonStyle(.borderless)
-            .keyboardShortcut(.rightArrow, modifiers: [])
+                Button(action: {
+                    viewModel.seekRelative(seconds: 10)
+                }) {
+                    Image(systemName: "goforward.10")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.borderless)
+                .keyboardShortcut(.rightArrow, modifiers: [])
 
-            Spacer()
-                .frame(width: 16)
+                Spacer()
+                    .frame(width: 16)
+
+                // Playback speed control
+                Menu {
+                    ForEach(speedOptions, id: \.self) { speed in
+                        Button(action: {
+                            viewModel.setPlaybackSpeed(speed)
+                        }) {
+                            HStack {
+                                if viewModel.playbackSpeed == speed {
+                                    Image(systemName: "checkmark")
+                                }
+                                Text("\(speed, specifier: "%.2f")x")
+                            }
+                        }
+                    }
+                } label: {
+                    Text("\(viewModel.playbackSpeed, specifier: "%.2f")x")
+                        .font(.system(size: 14))
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+
+                Spacer()
+                    .frame(width: 16)
+
+                VStack(spacing: 2) {
+                    GeometryReader { geometry in
+                        ZStack(alignment: .top) {
+                            Slider(value: $sliderPosition, in: 0...1) { editing in
+                                isDragging = editing
+                                if !editing {
+                                    viewModel.seekToPosition(sliderPosition)
+                                }
+                            }
+                            .zIndex(1)
+                            .onChange(of: viewModel.playbackProgress, { _, value in
+                                if !isDragging {
+                                    sliderPosition = value
+                                }
+                            })
+
+                            if isDragging {
+                                SeekTooltip(time: viewModel.duration * sliderPosition)
+                                    .zIndex(2)
+                            }
+                        }
+                    }
+                    .frame(height: 24)
+
+                    HStack {
+                        Spacer()
+                        Text("\(formatTime(viewModel.currentTime)) / \(formatTime(viewModel.duration))")
+                    }
+                    .font(.caption)
+                }
+                .padding(.top, 20)
             
-            // Playback speed control
-            Menu {
-                ForEach(speedOptions, id: \.self) { speed in
-                    Button(action: {
-                        viewModel.setPlaybackSpeed(speed)
-                    }) {
-                        HStack {
-                            if viewModel.playbackSpeed == speed {
-                                Image(systemName: "checkmark")
-                            }
-                            Text("\(speed, specifier: "%.2f")x")
-                        }
-                    }
-                }
-            } label: {
-                Text("\(viewModel.playbackSpeed, specifier: "%.2f")x")
-                    .font(.system(size: 14))
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-
-            Spacer()
-                .frame(width: 16)
-
-            VStack(spacing: 2) {
-                GeometryReader { geometry in
-                    ZStack(alignment: .top) {
-                        Slider(value: $sliderPosition, in: 0...1) { editing in
-                            isDragging = editing
-                            if !editing {
-                                viewModel.seekToPosition(sliderPosition)
-                            }
-                        }
-                        .zIndex(1)
-                        .onChange(of: viewModel.playbackProgress, { _, value in
-                            if !isDragging {
-                                sliderPosition = value
-                            }
-                        })
-
-                        if isDragging {
-                            SeekTooltip(time: viewModel.duration * sliderPosition)
-                                .zIndex(2)
-                        }
-                    }
-                }
-                .frame(height: 24)
-
-                HStack {
-                    Spacer()
-                    Text("\(formatTime(viewModel.currentTime)) / \(formatTime(viewModel.duration))")
-                }
-                .font(.caption)
-            }
-            .padding(.top, 20)
         }
         .padding(.all, 24)
         .padding(.top, 0)
         .background(Color(NSColor.windowBackgroundColor))
     }
-    
+
     // Time formatting function
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
@@ -485,7 +620,7 @@ private struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: Vi
                 Text(L10n.TranscriptionView.noTranscription)
                     .foregroundColor(.secondary)
                 
-                if viewModel.isFileLoaded, let _ = viewModel.audioFile {
+                if viewModel.isFileLoaded, let _ = viewModel.mediaFile {
                     Button(L10n.TranscriptionView.startTranscription) {
                         viewModel.transcribeAudio()
                     }
