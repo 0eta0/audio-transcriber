@@ -76,6 +76,10 @@ internal enum L10n {
     internal static func fileSelectionErrorFormat(_ p1: Any) -> String {
       return L10n.tr("Localizable", "TranscriptionView.fileSelectionErrorFormat", String(describing: p1), fallback: "File selection error: %@")
     }
+    /// Find
+    internal static let find = L10n.tr("Localizable", "TranscriptionView.find", fallback: "Find")
+    /// No results found for your search.
+    internal static let noSearchResults = L10n.tr("Localizable", "TranscriptionView.noSearchResults", fallback: "No results found for your search.")
     /// No transcription available
     internal static let noTranscription = L10n.tr("Localizable", "TranscriptionView.noTranscription", fallback: "No transcription available")
     /// or
@@ -96,6 +100,8 @@ internal enum L10n {
     internal static let retranscribeHelp = L10n.tr("Localizable", "TranscriptionView.retranscribeHelp", fallback: "Retranscribe the audio file")
     /// Save as Text File
     internal static let saveAsTextFile = L10n.tr("Localizable", "TranscriptionView.saveAsTextFile", fallback: "Save as Text File")
+    /// Search Transcription
+    internal static let searchPlaceholder = L10n.tr("Localizable", "TranscriptionView.searchPlaceholder", fallback: "Search Transcription")
     /// TranscriptionView
     internal static let selectAudioFile = L10n.tr("Localizable", "TranscriptionView.selectAudioFile", fallback: "Select Audio File")
     /// Select Model

@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import Combine
+import SwiftUI // Add SwiftUI for @FocusState
 
 protocol TranscriptionViewModelType: ObservableObject, Sendable {
 
@@ -22,6 +23,10 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
 
     var currentModelName: String { get }
     var supportedModels: [String] { get }
+
+    // Search related
+    var searchText: String { get set }
+    var filteredSegments: [TranscriptSegment] { get }
 
     func loadAudioFile(url: URL) async
     func togglePlayback()
@@ -65,6 +70,9 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     private var forceAutoScrollEnabled: Bool = false
     private var forceAutoScrollDurationTimer: Timer?
 
+    // Search
+    @Published var searchText: String = ""
+
     // 音声処理関連
     private var audioPlayer: AVAudioPlayer?
     private var timer: Timer?
@@ -78,6 +86,16 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     
     var supportedModels: [String] {
         return whisperManager?.supportedModel() ?? []
+    }
+
+    // MARK: - Computed Properties
+
+    var filteredSegments: [TranscriptSegment] {
+        if searchText.isEmpty {
+            return transcribedSegments
+        } else {
+            return transcribedSegments.filter { $0.text.localizedCaseInsensitiveContains(searchText) }
+        }
     }
 
     // MARK: - Initializer

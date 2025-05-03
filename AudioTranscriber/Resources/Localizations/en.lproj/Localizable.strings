@@ -47,6 +47,9 @@
 "TranscriptionView.dropAudioFileHere" = "Drop audio file here";
 "TranscriptionView.fileSelectionErrorFormat" = "File selection error: %@";
 "TranscriptionView.untitled" = "untitled";
+"TranscriptionView.searchPlaceholder" = "Search Transcription";
+"TranscriptionView.find" = "Find";
+"TranscriptionView.noSearchResults" = "No results found for your search.";
 
 /* WhisperError */
 "WhisperError.fileNotFound" = "File not found";

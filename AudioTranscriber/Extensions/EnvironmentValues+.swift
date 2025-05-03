@@ -1,6 +1,5 @@
 import SwiftUI
 
-
 extension EnvironmentValues {
 
     var dependency: DependencyType? {

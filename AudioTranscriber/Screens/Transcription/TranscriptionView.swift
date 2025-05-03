@@ -12,7 +12,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
     @State private var isFilePickerPresented = false
     @State private var showingAlert = false
     @State private var alertMessage = ""
-    @State private var showSetupModal = true
+    @State private var showSetupModal = false
 
     // MARK: Lifecycle
 
@@ -93,11 +93,13 @@ private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
     @Binding var showingAlert: Bool
     @Binding var alertMessage: String
     @Binding var showSetupModal: Bool
-
+    
     @State private var showingSavePanel = false
     @State private var showingResetConfirmation = false
     @State private var showingRetranscribeConfirmation = false
 
+    @FocusState private var isSearchFieldFocused: Bool
+    
     // MARK: Lifecycle
     
     var body: some View {
@@ -105,7 +107,40 @@ private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
             Text(viewModel.audioFile?.lastPathComponent ?? L10n.TranscriptionView.untitled)
                 .font(.headline)
                 .lineLimit(1)
+            
             Spacer()
+            
+            // Add Search Field
+            if !viewModel.transcribedSegments.isEmpty {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                    TextField(L10n.TranscriptionView.searchPlaceholder, text: $viewModel.searchText)
+                        .textFieldStyle(.plain)
+                        .focused($isSearchFieldFocused)
+                        .frame(width: 140)
+                        .onKeyPress(.escape) {
+                            isSearchFieldFocused = false
+                            return .handled
+                        }
+                        .onReceive(NotificationCenter.default.publisher(for: .focusSearchField)) { _ in
+                            isSearchFieldFocused = true
+                        }
+                    if !viewModel.searchText.isEmpty {
+                        Button {
+                            viewModel.searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color(NSColor.textBackgroundColor))
+                .cornerRadius(6)
+            }
             
             Button(action: {
                 showSetupModal = true
@@ -177,6 +212,9 @@ private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
         .padding(.vertical, 12)
         .padding(.horizontal, 24)
         .background(Color(NSColor.windowBackgroundColor))
+        .onTapGesture {
+            isSearchFieldFocused = false
+        }
     }
 }
 
@@ -250,12 +288,8 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
                     }
                 }
             } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "speedometer")
-                        .frame(width: 20, height: 20)
-                    Text("\(viewModel.playbackSpeed, specifier: "%.2f")x")
-                        .font(.caption)
-                }
+                Text("\(viewModel.playbackSpeed, specifier: "%.2f")x")
+                    .font(.system(size: 14))
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
@@ -348,8 +382,17 @@ private struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: 
         ScrollViewReader { scrollView in
             ZStack(alignment: .bottomTrailing) {
                 VStack {
-                    if viewModel.transcribedSegments.isEmpty {
-                        EmptyTranscriptionView(viewModel: viewModel)
+                    // Use filteredSegments for display
+                    if viewModel.filteredSegments.isEmpty {
+                        if viewModel.isTranscribing {
+                            EmptyTranscriptionView(viewModel: viewModel)
+                        } else if !viewModel.searchText.isEmpty {
+                            Text(L10n.TranscriptionView.noSearchResults) // Show no search results message
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else {
+                            EmptyTranscriptionView(viewModel: viewModel)
+                        }
                     } else {
                         TranscriptionListView(viewModel: viewModel)
                     }
@@ -377,8 +420,11 @@ private struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: 
             .onChange(of: viewModel.currentSegmentID) { _, id in
                 if viewModel.autoScrollEnabled {
                     viewModel.autoScrollEnabled(with: 1.0)
-                    withAnimation {
-                        scrollView.scrollTo(id, anchor: .center)
+                    // Only scroll if the current segment is visible in the filtered list
+                    if viewModel.filteredSegments.contains(where: { $0.id == id }) {
+                        withAnimation {
+                            scrollView.scrollTo(id, anchor: .center)
+                        }
                     }
                 }
             }
@@ -468,10 +514,12 @@ private struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: Vie
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(viewModel.transcribedSegments) { segment in
+                // Iterate over filteredSegments
+                ForEach(viewModel.filteredSegments) { segment in
                     TranscriptSegmentView(
                         segment: segment,
-                        isActive: $viewModel.currentSegmentID.wrappedValue == segment.id
+                        isActive: $viewModel.currentSegmentID.wrappedValue == segment.id,
+                        searchText: viewModel.searchText // Pass search text for highlighting
                     )
                     .id(segment.id)
                     .onTapGesture {
@@ -518,6 +566,7 @@ private struct TranscriptSegmentView: View {
     // Model Data
     var segment: TranscriptSegment
     var isActive: Bool
+    var searchText: String // Receive search text
     
     // MARK: Lifecycle
     
@@ -528,7 +577,8 @@ private struct TranscriptSegmentView: View {
                 .multilineTextAlignment(.leading)
                 .foregroundColor(isActive ? .primary : .secondary)
 
-            Text(segment.text)
+            // Highlight search text
+            highlightedText(segment.text, search: searchText)
                 .foregroundColor(isActive ? .primary : .secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -547,6 +597,21 @@ private struct TranscriptSegmentView: View {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return L10n.TranscriptionView.timeFormat(minutes, seconds)
+    }
+
+    // Function to highlight search text
+    private func highlightedText(_ text: String, search: String) -> Text {
+        guard !search.isEmpty, let range = text.range(of: search, options: .caseInsensitive) else {
+            return Text(text)
+        }
+
+        let before = text[..<range.lowerBound]
+        let highlighted = text[range]
+        let after = text[range.upperBound...]
+
+        return Text(before) +
+               Text(highlighted).bold().foregroundColor(.accentColor) + // Highlight style
+               highlightedText(String(after), search: search) // Recursively highlight remaining parts
     }
 }
 
@@ -646,10 +711,4 @@ private struct DragOverlayView: View {
             )
             .padding(20)
     }
-}
-
-#Preview {
-    let viewModel = TranscriptionViewModel(whisperManager: WhisperManager())
-    TranscriptionView(viewModel: viewModel)
-        .frame(minWidth: 800, minHeight: 600)
 }

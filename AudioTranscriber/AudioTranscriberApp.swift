@@ -1,5 +1,6 @@
 import SwiftUI
 
+
 @main
 struct AudioTranscriberApp: App {
 
@@ -17,5 +18,16 @@ struct AudioTranscriberApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
+        .commands {
+            // Add command to the Edit menu group instead of replacing .find
+            CommandGroup(after: .textEditing) {
+                Divider()
+                Button(L10n.TranscriptionView.find) {
+                    // Post notification to focus search field
+                    NotificationCenter.default.post(name: .focusSearchField, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
+        }
     }
 }

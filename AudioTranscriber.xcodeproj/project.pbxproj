@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6612B1FF2DC6140300FB7B5D /* Notification+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6612B1FE2DC6140300FB7B5D /* Notification+.swift */; };
 		662A7D622DABFF3500C53EBB /* SupportModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662A7D612DABFF3200C53EBB /* SupportModel.swift */; };
 		66827F6B2DAAA72400F77592 /* Dependency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66827F6A2DAAA72400F77592 /* Dependency.swift */; };
 		6682801C2DAABDA800F77592 /* EnvironmentValues+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */; };
@@ -25,6 +26,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6612B1FE2DC6140300FB7B5D /* Notification+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Notification+.swift"; sourceTree = "<group>"; };
 		662A7D612DABFF3200C53EBB /* SupportModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportModel.swift; sourceTree = "<group>"; };
 		66827F6A2DAAA72400F77592 /* Dependency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependency.swift; sourceTree = "<group>"; };
 		6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EnvironmentValues+.swift"; sourceTree = "<group>"; };
@@ -62,6 +64,7 @@
 		6682801B2DAABDA800F77592 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				6612B1FE2DC6140300FB7B5D /* Notification+.swift */,
 				6682801A2DAABDA800F77592 /* EnvironmentValues+.swift */,
 			);
 			path = Extensions;
@@ -228,6 +231,7 @@
 				FCF01A162B8E1E9A00F12345 /* WhisperManager.swift in Sources */,
 				66827F6B2DAAA72400F77592 /* Dependency.swift in Sources */,
 				668280212DABC35300F77592 /* WhisperInitializeStatus.swift in Sources */,
+				6612B1FF2DC6140300FB7B5D /* Notification+.swift in Sources */,
 				66E6B0F92DAA9EC90090E104 /* WhisperError.swift in Sources */,
 				66E6B0FB2DAA9F100090E104 /* SetupViewModel.swift in Sources */,
 				FCF01A102B8E1E7A00F12345 /* TranscriptSegment.swift in Sources */,

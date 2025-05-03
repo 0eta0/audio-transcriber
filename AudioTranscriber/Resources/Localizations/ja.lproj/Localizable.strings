@@ -47,6 +47,9 @@
 "TranscriptionView.dropAudioFileHere" = "ここに音声ファイルをドロップ";
 "TranscriptionView.fileSelectionErrorFormat" = "ファイル選択エラー: %@";
 "TranscriptionView.untitled" = "名称未設定";
+"TranscriptionView.searchPlaceholder" = "文字起こしを検索";
+"TranscriptionView.find" = "検索";
+"TranscriptionView.noSearchResults" = "検索結果が見つかりませんでした。";
 
 /* WhisperError */
 "WhisperError.fileNotFound" = "ファイルが見つかりませんでした";
