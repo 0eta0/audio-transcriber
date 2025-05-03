@@ -1,7 +1,7 @@
 import Foundation
 import AVFoundation
 import Combine
-import SwiftUI // Add SwiftUI for @FocusState
+import SwiftUI
 
 protocol TranscriptionViewModelType: ObservableObject, Sendable {
 
@@ -49,7 +49,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // MARK: - Properties
 
-    // 音声ファイル関連
+    // Audio file related
     @Published var audioFile: URL?
     @Published var duration: TimeInterval = 0.0
     @Published var currentTime: TimeInterval = 0.0
@@ -58,7 +58,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     @Published var isFileLoaded: Bool = false
     @Published var playbackSpeed: Float = 1.0
     
-    // 文字起こし関連
+    // Transcription related
     @Published var transcribedSegments: [TranscriptSegment] = []
     @Published var isTranscribing: Bool = false
     @Published var transcribingProgress: TimeInterval = .zero
@@ -73,7 +73,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     // Search
     @Published var searchText: String = ""
 
-    // 音声処理関連
+    // Audio processing related
     private var audioPlayer: AVAudioPlayer?
     private var timer: Timer?
     private var whisperManager: WhisperManagerType?
@@ -117,22 +117,22 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
     // MARK: - Public Functions
 
-    // 音声ファイルを読み込む
+    // Load audio file
     func loadAudioFile(url: URL) async {
         Task { @MainActor in
             stopPlayback()
             resetTranscription()
 
             do {
-                // ファイルのセキュリティアクセス処理とコピー
+                // File security access processing and copying
                 let tempURL = try await secureCopyFile(from: url)
-                // サポートされているオーディオファイル形式かチェック
+                // Check if the audio file format is supported
                 let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
                 if !supportedFormats.contains(url.pathExtension.lowercased()) {
                     throw WhisperError.unsupportedFormat
                 }
                 
-                // オーディオプレーヤーの読み込み
+                // Load audio player
                 try await loadAudioPlayer(with: tempURL)
             } catch let error as WhisperError {
                 Task { @MainActor in
@@ -146,7 +146,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
 
-    // 再生／一時停止を切り替え
+    // Toggle playback
     func togglePlayback() {
         Task { @MainActor in
             if isPlaying {
@@ -157,17 +157,17 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
     
-    // 再生開始
+    // Start playback
     func startPlayback() {
         guard let player = audioPlayer, !isPlaying else { return }
 
         Task { @MainActor in
-            player.enableRate = true // レート変更を有効にする
-            player.rate = playbackSpeed // 設定された再生速度を適用
+            player.enableRate = true // Enable rate change
+            player.rate = playbackSpeed // Apply the set playback speed
             player.play()
             isPlaying = true
 
-            // タイマーで現在の再生位置を更新
+            // Update the current playback position with a timer
             timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
                 guard let player = self?.audioPlayer else { return }
 
@@ -176,7 +176,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
     
-    // 一時停止
+    // Pause playback
     func pausePlayback() {
         guard isPlaying else { return }
 
@@ -187,7 +187,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
     
-    // 再生停止
+    // Stop playback
     func stopPlayback() {
         Task { @MainActor in
             audioPlayer?.stop()
@@ -197,7 +197,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
     
-    // 再生位置をシーク
+    // Seek to position
     func seekToPosition(_ position: Double) {
         guard let player = audioPlayer else { return }
 
@@ -210,16 +210,16 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
     
-    // 相対的にシーク（前後に移動）
+    // Seek relative (move forward/backward)
     func seekRelative(seconds: Double) {
         guard let player = audioPlayer else { return }
 
         Task { @MainActor [self] in
-            // 現在位置から相対的に移動
+            // Move relative to the current position
             var newTime = player.currentTime + seconds
-            // 範囲を制限
+            // Restrict range
             newTime = max(0, min(duration, newTime))
-            // シーク実行
+            // Perform seek
             player.currentTime = newTime
             updateCurrentTime(newTime)
         }
@@ -278,10 +278,10 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
 
         Task { @MainActor [self] in
             currentSegmentID = segment.id
-            // セグメントの開始時間にシーク
+            // Seek to the segment's start time
             player.currentTime = segment.startTime
             updateCurrentTime(segment.startTime)
-            // 再生開始
+            // Start playback
             startPlayback()
         }
     }
@@ -345,12 +345,12 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         autoScrollEnabled = false
     }
     
-    // ドラッグ＆ドロップの処理
+    // Drag & drop processing
     func handleDrop(providers: [NSItemProvider]) -> Bool {
         for provider in providers {
-            // 利用可能なタイプ識別子を確認
+            // Check available type identifiers
             let availableTypes = provider.registeredTypeIdentifiers
-            // 使える識別子を探す
+            // Find usable identifier
             let identifierToUse = availableTypes.first(where: { ident in
                 return ident == "public.file-url" || 
                        ident == UTType.fileURL.identifier || 
@@ -362,7 +362,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                     if error != nil { return }
 
                     var fileURL: URL? = nil
-                    // 様々なデータ形式に対応
+                    // Support various data formats
                     if let url = item as? URL {
                         fileURL = url
                     } else if let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil) {
@@ -370,9 +370,9 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                     } else if let string = item as? String, let url = URL(string: string) {
                         fileURL = url
                     }
-                    // ファイルURLが取得できたら処理
+                    // Process if file URL is obtained
                     if let url = fileURL {
-                        // オーディオファイルかチェック
+                        // Check if it's an audio file
                         let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
                         if supportedFormats.contains(url.pathExtension.lowercased()) {
                             Task { @MainActor in
@@ -381,7 +381,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
                         }
                     }
                 }
-                // 最初に成功した項目だけを処理
+                // Process only the first successful item
                 return true
             }
         }
@@ -389,31 +389,31 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     }
 
     func setPlaybackSpeed(_ speed: Float) {
-        playbackSpeed = speed // 常に希望の速度を更新
+        playbackSpeed = speed // Always update the desired speed
         if let player = audioPlayer {
-            player.enableRate = true // レート変更が有効であることを確認
-            player.rate = speed // プレーヤーが存在する場合はすぐに適用
+            player.enableRate = true // Ensure rate change is enabled
+            player.rate = speed // Apply immediately if player exists
         }
     }
 
     // MARK: - Private Functions
 
-    // 文字起こしをリセット
+    // Reset transcription
     private func resetTranscription() {
         transcribedSegments = []
         currentSegmentID = UUID()
     }
 
-    // 現在の時間を更新
+    // Update current time
     private func updateCurrentTime(_ time: TimeInterval) {
         currentTime = time
         playbackProgress = time / duration
         
-        // 現在のセグメントを更新
+        // Update current segment
         updateCurrentSegment(for: time)
     }
     
-    // 現在のセグメントを更新
+    // Update current segment
     private func updateCurrentSegment(for time: TimeInterval) {
         for segment in transcribedSegments {
             if time >= segment.startTime && time <= segment.endTime {
@@ -423,7 +423,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         }
     }
 
-    // 時間のフォーマット
+    // Format time
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
@@ -431,19 +431,19 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         return String(format: "%d:%02d.%02d", minutes, seconds, milliseconds)
     }
 
-    // セキュリティスコープドリソースへのアクセスと一時ファイルのコピー
+    // Access security-scoped resource and copy temporary file
     private func secureCopyFile(from url: URL) async throws -> URL {
-        // セキュリティスコープドリソースへのアクセスを開始
+        // Start accessing security-scoped resource
         let accessGranted = url.startAccessingSecurityScopedResource()
         
         defer {
-            // 関数が終了するときにアクセス権を解放
+            // Release access rights when the function ends
             if accessGranted {
                 url.stopAccessingSecurityScopedResource()
             }
         }
         
-        // アクセス権を維持するために一時的なコピーを作成
+        // Create a temporary copy to maintain access rights
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let tempURL = documentsDirectory.appendingPathComponent(url.lastPathComponent)
 
@@ -453,12 +453,12 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         return tempURL
     }
     
-    // 通常の音声ファイルを読み込む
+    // Load regular audio file
     private func loadAudioPlayer(with url: URL) async throws {
         do {
             let currentSpeed = audioPlayer?.rate ?? 1.0
             audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.rate = currentSpeed // 再生速度を維持
+            audioPlayer?.rate = currentSpeed // Maintain playback speed
             audioPlayer?.prepareToPlay()
             
             guard let duration = audioPlayer?.duration else {

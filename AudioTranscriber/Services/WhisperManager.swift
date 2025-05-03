@@ -21,20 +21,20 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
     // MARK: Public Functions
 
-    // WhisperKitの初期設定
+    // Initialize WhisperKit
     func setupWhisperIfNeeded(modelName: String, progressCallback: ((WhisperInitializeStatus) -> Void)? = nil) async throws {
-        // モデルが変更された場合か、まだ初期化されていない場合のみセットアップを実行
+        // Run setup only if the model has changed or has not been initialized yet
         if (whisperKit != nil && currentModelName == modelName) {
             return
         }
 
         progressCallback?(.checkingModel)
-        // モデル名が有効かチェック
+        // Check if the model name is valid
         let supported = supportedModel()
         guard supported.contains(modelName) else {
             throw WhisperError.unsupportedModel
         }
-        // WhisperKitの設定を作成
+        // Create WhisperKit configuration
         let config = WhisperKitConfig(
             model: modelName,
             modelRepo: modelRepo,
@@ -43,7 +43,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         )
         do {
             progressCallback?(.downloadingModel(progress: 0.0))
-            // WhisperKitのダウンロードを実行
+            // Execute WhisperKit download
             _ = try await WhisperKit.download(
                 variant: modelName,
                 from: modelRepo,
@@ -55,7 +55,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
             let whisperKit = try await WhisperKit(config)
             try await whisperKit.loadModels()
-            // モデルの読み込みが成功した場合、WhisperKitインスタンスを保存
+            // Save WhisperKit instance if model loading is successful
             self.whisperKit = whisperKit
             currentModelName = modelName
 
@@ -73,10 +73,10 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         return currentModelName
     }
 
-    // 音声ファイルを文字起こしする
+    // Transcribe audio file
     func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment] {
         try await setupWhisperIfNeeded(modelName: currentModelName)
-        // ファイル形式を確認
+        // Check file format
         let fileExtension = url.pathExtension.lowercased()
         let supportedFormats = SupportAudioType.allCases.map { $0.rawValue }
         guard supportedFormats.contains(fileExtension) else {
@@ -86,9 +86,9 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         guard let whisperKit = whisperKit else {
             throw WhisperError.uninitialized
         }
-        // オーディオファイルの長さを取得
+        // Get audio file duration
         let audioDuration = try await getAudioDuration(for: url)
-        // 文字起こし処理を実行
+        // Execute transcription process
         return try await transcribeAudio(
             whisperKit: whisperKit,
             url: url,
@@ -99,14 +99,14 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
     // MARK: Private Functions
     
-    // オーディオファイルの長さを取得
+    // Get audio file duration
     private func getAudioDuration(for url: URL) async throws -> TimeInterval {
-        // 通常の音声ファイル
+        // Regular audio file
         let audioPlayer = try AVAudioPlayer(contentsOf: url)
         return audioPlayer.duration
     }
 
-    // 文字起こしを実行（WhisperKitを使用）
+    // Execute transcription (using WhisperKit)
     private func transcribeAudio(
         whisperKit: WhisperKit,
         url: URL,
@@ -114,13 +114,13 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         progressCallback: @escaping (TimeInterval) -> Void
     ) async throws -> [TranscriptSegment]{
         do {
-            // 文字起こし設定
+            // Transcription settings
             let decodeOptions = DecodingOptions(
                 task: .transcribe,
                 language: language,
                 temperature: 0.0
             )
-            // 文字起こしを実行 - audioPathを使用
+            // Execute transcription - using audioPath
             let results = try await whisperKit.transcribe(
                 audioPath: url.path,
                 decodeOptions: decodeOptions,
@@ -129,7 +129,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
                     progressCallback(progress)
                     return true
             })
-            // WhisperKitの結果からTranscriptSegmentを生成
+            // Generate TranscriptSegment from WhisperKit results
             var segments: [TranscriptSegment] = []
             guard let result = results.first else {
                 return []
@@ -137,7 +137,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
 
             for segment in result.segments {
                 let cleanedText = removeTagsFromText(segment.text)
-                // 同じテキストが連続している場合は、前のセグメントを更新
+                // If the same text continues, update the previous segment
                 if let last = segments.last, last.text == cleanedText {
                     let ts = TranscriptSegment(
                         text: cleanedText.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -161,9 +161,9 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         }
     }
 
-    // 山括弧で囲まれたタグを削除するヘルパーメソッド
+    // Helper method to remove tags enclosed in angle brackets
     private func removeTagsFromText(_ text: String) -> String {
-        // 正規表現で<>で囲まれた部分を削除
+        // Remove parts enclosed in <> using regular expressions
         let pattern = "<[^>]+>"
         do {
             let regex = try NSRegularExpression(pattern: pattern, options: [])

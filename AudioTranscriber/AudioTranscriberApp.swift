@@ -19,7 +19,6 @@ struct AudioTranscriberApp: App {
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
         .commands {
-            // Add command to the Edit menu group instead of replacing .find
             CommandGroup(after: .textEditing) {
                 Divider()
                 Button(L10n.TranscriptionView.find) {

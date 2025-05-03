@@ -5,7 +5,6 @@ enum WhisperInitializeStatus: Equatable {
     case loadingModel
     case ready
 
-    // Explicit implementation of Equatable
     static func == (lhs: WhisperInitializeStatus, rhs: WhisperInitializeStatus) -> Bool {
         switch (lhs, rhs) {
         case (.uninitialized, .uninitialized):

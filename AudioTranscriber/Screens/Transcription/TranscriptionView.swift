@@ -20,7 +20,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
         if let dependency = dependency {
             ZStack {
                 if viewModel.isFileLoaded {
-                    // ファイルが読み込まれている場合の通常のレイアウト
+                    // Normal layout when a file is loaded
                     VStack(spacing: 0) {
                         ToolbarView(
                             viewModel: viewModel,
@@ -41,7 +41,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
                         }
                     }
                 } else {
-                    // ファイルが読み込まれていない場合の初期画面
+                    // Initial screen when no file is loaded
                     FileLoadingPromptView(
                         showSetupModal: $showSetupModal,
                         isFilePickerPresented: $isFilePickerPresented,
@@ -82,7 +82,7 @@ struct TranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 
 // MARK: - Subviews
 
-// ツールバーコンポーネント
+// Toolbar component
 private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
@@ -218,7 +218,7 @@ private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
     }
 }
 
-// オーディオプレーヤーコンポーネント
+// Audio player component
 private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
@@ -335,7 +335,7 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
         .background(Color(NSColor.windowBackgroundColor))
     }
     
-    // 時間のフォーマット関数
+    // Time formatting function
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
@@ -343,7 +343,7 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
     }
 }
 
-// シークバーの時間表示用ツールチップ
+// Tooltip for seek bar time display
 private struct SeekTooltip: View {
 
     let time: TimeInterval
@@ -361,7 +361,7 @@ private struct SeekTooltip: View {
             .offset(y: -32)
     }
     
-    // 時間のフォーマット関数
+    // Time formatting function
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
@@ -369,7 +369,7 @@ private struct SeekTooltip: View {
     }
 }
 
-// 文字起こし表示コンポーネント
+// Transcription display component
 private struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
@@ -432,7 +432,7 @@ private struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: 
     }
 }
 
-// 文字起こしがない場合の表示
+// Display when there is no transcription
 private struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
@@ -500,7 +500,7 @@ private struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: Vi
     }
 }
 
-// 文字起こしリスト表示
+// Transcription list display
 private struct TranscriptionListView<ViewModel: TranscriptionViewModelType>: View {
 
     // MARK: Properties
@@ -558,7 +558,7 @@ private struct OffsetPreferenceKey: PreferenceKey {
     }
 }
 
-// 文字起こしのセグメント表示用ビュー
+// View for displaying transcription segments
 private struct TranscriptSegmentView: View {
 
     // MARK: Properties
@@ -615,7 +615,7 @@ private struct TranscriptSegmentView: View {
     }
 }
 
-// ファイル読み込み前の初期画面
+// Initial screen before file loading
 private struct FileLoadingPromptView<ViewModel: TranscriptionViewModelType>: View {
     
     // MARK: Properties
@@ -691,7 +691,7 @@ private struct FileLoadingPromptView<ViewModel: TranscriptionViewModelType>: Vie
     }
 }
 
-// ドラッグオーバーレイ表示
+// Drag overlay display
 private struct DragOverlayView: View {
 
     // MARK: Lifecycle
