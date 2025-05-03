@@ -174,7 +174,7 @@ private struct ToolbarView<ViewModel: TranscriptionViewModelType>: View {
             }
             .keyboardShortcut("r", modifiers: [.command, .shift])
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, 12)
         .padding(.horizontal, 24)
         .background(Color(NSColor.windowBackgroundColor))
     }
@@ -186,6 +186,11 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
     // MARK: Properties
 
     @ObservedObject var viewModel: ViewModel
+    @State private var isDragging = false
+    @State private var sliderPosition: CGFloat = 0
+    
+    // Available playback speeds
+    private let speedOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 
     // MARK: Lifecycle
     
@@ -196,7 +201,7 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
             }) {
                 Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
                     .resizable()
-                    .frame(width: 32, height: 32)
+                    .frame(width: 40, height: 40)
                     .foregroundColor(.accentColor)
             }
             .buttonStyle(.borderless)
@@ -229,13 +234,58 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
 
             Spacer()
                 .frame(width: 16)
-
-            VStack(spacing: 2) {
-                Slider(value: $viewModel.playbackProgress, in: 0...1) { editing in
-                    if !editing {
-                        viewModel.seekToPosition(viewModel.playbackProgress)
+            
+            // Playback speed control
+            Menu {
+                ForEach(speedOptions, id: \.self) { speed in
+                    Button(action: {
+                        viewModel.setPlaybackSpeed(speed)
+                    }) {
+                        HStack {
+                            if viewModel.playbackSpeed == speed {
+                                Image(systemName: "checkmark")
+                            }
+                            Text("\(speed, specifier: "%.2f")x")
+                        }
                     }
                 }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "speedometer")
+                        .frame(width: 20, height: 20)
+                    Text("\(viewModel.playbackSpeed, specifier: "%.2f")x")
+                        .font(.caption)
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+
+            Spacer()
+                .frame(width: 16)
+
+            VStack(spacing: 2) {
+                GeometryReader { geometry in
+                    ZStack(alignment: .top) {
+                        Slider(value: $sliderPosition, in: 0...1) { editing in
+                            isDragging = editing
+                            if !editing {
+                                viewModel.seekToPosition(sliderPosition)
+                            }
+                        }
+                        .zIndex(1)
+                        .onChange(of: viewModel.playbackProgress, { _, value in
+                            if !isDragging {
+                                sliderPosition = value
+                            }
+                        })
+
+                        if isDragging {
+                            SeekTooltip(time: viewModel.duration * sliderPosition)
+                                .zIndex(2)
+                        }
+                    }
+                }
+                .frame(height: 24)
 
                 HStack {
                     Text(formatTime(viewModel.currentTime))
@@ -244,11 +294,37 @@ private struct AudioPlayerView<ViewModel: TranscriptionViewModelType>: View {
                 }
                 .font(.caption)
             }
-            .padding(.top, 16)
+            .padding(.top, 20)
         }
         .padding(.all, 24)
         .padding(.top, 0)
         .background(Color(NSColor.windowBackgroundColor))
+    }
+    
+    // 時間のフォーマット関数
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return L10n.TranscriptionView.timeFormat(minutes, seconds)
+    }
+}
+
+// シークバーの時間表示用ツールチップ
+private struct SeekTooltip: View {
+
+    let time: TimeInterval
+    
+    var body: some View {
+        Text(formatTime(time))
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(NSColor.controlBackgroundColor))
+            )
+            .frame(height: 32)
+            .offset(y: -32)
     }
     
     // 時間のフォーマット関数
@@ -448,7 +524,7 @@ private struct TranscriptSegmentView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 4) {
             Text(formatTime(segment.startTime))
-                .frame(width: 80, alignment: .leading)
+                .frame(width: 100, alignment: .leading)
                 .multilineTextAlignment(.leading)
                 .foregroundColor(isActive ? .primary : .secondary)
 
@@ -570,4 +646,10 @@ private struct DragOverlayView: View {
             )
             .padding(20)
     }
+}
+
+#Preview {
+    let viewModel = TranscriptionViewModel(whisperManager: WhisperManager())
+    TranscriptionView(viewModel: viewModel)
+        .frame(minWidth: 800, minHeight: 600)
 }

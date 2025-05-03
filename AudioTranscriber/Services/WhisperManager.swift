@@ -170,7 +170,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             let range = NSRange(location: 0, length: text.utf16.count)
             return regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "")
         } catch {
-            print("正規表現エラー: \(error.localizedDescription)")
+            print("error: regex: \(error.localizedDescription)")
             return text
         }
     }

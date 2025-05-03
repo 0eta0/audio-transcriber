@@ -12,6 +12,7 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     var playbackProgress: Double { get set }
     var isPlaying: Bool { get set }
     var isFileLoaded: Bool { get set }
+    var playbackSpeed: Float { get }
 
     var transcribedSegments: [TranscriptSegment] { get set }
     var isTranscribing: Bool { get set }
@@ -36,6 +37,7 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     func autoScrollEnabled(with duration: TimeInterval?)
     func autoScrollDisabled()
     func handleDrop(providers: [NSItemProvider]) -> Bool
+    func setPlaybackSpeed(_ speed: Float)
 }
 
 final class TranscriptionViewModel: TranscriptionViewModelType {
@@ -49,6 +51,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     @Published var playbackProgress: Double = 0.0
     @Published var isPlaying: Bool = false
     @Published var isFileLoaded: Bool = false
+    @Published var playbackSpeed: Float = 1.0
     
     // 文字起こし関連
     @Published var transcribedSegments: [TranscriptSegment] = []
@@ -141,6 +144,8 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         guard let player = audioPlayer, !isPlaying else { return }
 
         Task { @MainActor in
+            player.enableRate = true // レート変更を有効にする
+            player.rate = playbackSpeed // 設定された再生速度を適用
             player.play()
             isPlaying = true
 
@@ -177,6 +182,8 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     // 再生位置をシーク
     func seekToPosition(_ position: Double) {
         guard let player = audioPlayer else { return }
+
+        playbackProgress = position
 
         Task { @MainActor [self] in
             let targetTime = position * duration
@@ -243,7 +250,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
             do {
                 try text.write(to: url, atomically: true, encoding: .utf8)
             } catch {
-                print("文字起こし保存エラー: \(error.localizedDescription)")
+                print("error: failed to save: \(error.localizedDescription)")
             }
         }
     }
@@ -283,9 +290,9 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         let dateString = dateFormatter.string(from: Date())
         
         if let fileName = audioFile?.lastPathComponent.components(separatedBy: ".").first {
-            return "\(fileName)_文字起こし_\(dateString).txt"
+            return "\(fileName)_stt_\(dateString).txt"
         } else {
-            return "文字起こし_\(dateString).txt"
+            return "\(dateString).txt"
         }
     }
 
@@ -363,6 +370,14 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         return false
     }
 
+    func setPlaybackSpeed(_ speed: Float) {
+        playbackSpeed = speed // 常に希望の速度を更新
+        if let player = audioPlayer {
+            player.enableRate = true // レート変更が有効であることを確認
+            player.rate = speed // プレーヤーが存在する場合はすぐに適用
+        }
+    }
+
     // MARK: - Private Functions
 
     // 文字起こしをリセット
@@ -423,7 +438,9 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     // 通常の音声ファイルを読み込む
     private func loadAudioPlayer(with url: URL) async throws {
         do {
+            let currentSpeed = audioPlayer?.rate ?? 1.0
             audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.rate = currentSpeed // 再生速度を維持
             audioPlayer?.prepareToPlay()
             
             guard let duration = audioPlayer?.duration else {
