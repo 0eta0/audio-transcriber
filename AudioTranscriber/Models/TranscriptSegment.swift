@@ -1,6 +1,6 @@
 import Foundation
 
-// 文字起こしの各セグメントを表すモデル
+// Model representing each segment of the transcription
 struct TranscriptSegment: Identifiable {
     let id = UUID()
     let text: String

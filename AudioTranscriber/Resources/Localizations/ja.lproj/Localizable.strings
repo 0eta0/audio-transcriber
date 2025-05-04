@@ -1,0 +1,77 @@
+/* Toolbar */
+"Toolbar.help.help" = "AudioTranscriber ヘルプ";
+"Toolbar.help.acknowledgements" = "ライセンス情報";
+
+/* Acknowledgements */
+"Acknowledgements.empty" = "マークダウンが見つかりませんでした";
+
+/* Common */
+"Common.retryButton" = "再試行";
+"Common.backToAppButton" = "アプリに戻る";
+"Common.cancelButton" = "キャンセル";
+"Common.okButton" = "OK";
+
+/* SetupView */
+"SetupView.title" = "音声文字起こしモデルの変更";
+"SetupView.description" = "文字起こしに使用するWhisperモデルを変更できます。\nモデルによって精度と処理速度が異なります。";
+"SetupView.currentModelLabel" = "現在のモデル: %@";
+"SetupView.note" = "tiny, baseなどのモデルは音声認識精度が低いですが、文字起こしの速度が速いです。";
+"SetupView.changeModelButton" = "モデルを変更";
+
+/* SetupViewModel */
+"SetupViewModel.changingDescriptionFormat" = "%@\nに変更しています...";
+"SetupViewModel.changeModelErrorFormat" = "モデルの変更に失敗しました: %@";
+
+/* TranscriptionView */
+"TranscriptionView.selectMediaFile" = "音声・動画ファイルを選択";
+"TranscriptionView.dropMediaFile" = "ここに音声・動画ファイルをドロップ";
+"TranscriptionView.transcribe" = "文字起こし";
+"TranscriptionView.transcribing" = "文字起こし中...";
+"TranscriptionView.errorTitle" = "エラー";
+"TranscriptionView.errorMessageFormat" = "文字起こしに失敗しました: %@";
+"TranscriptionView.copy" = "コピー";
+"TranscriptionView.export" = "書き出す";
+"TranscriptionView.exportErrorTitle" = "書き出しエラー";
+"TranscriptionView.exportErrorMessage" = "ファイルの書き出しに失敗しました。";
+"TranscriptionView.exportSuccessTitle" = "書き出し成功";
+"TranscriptionView.exportSuccessMessage" = "ファイルが正常に書き出されました。";
+"TranscriptionView.selectModel" = "モデル選択";
+"TranscriptionView.selectModelHelp" = "文字起こしモデルを選択";
+"TranscriptionView.retranscribe" = "再文字起こし";
+"TranscriptionView.retranscribeHelp" = "音声・動画ファイルを再度文字起こしする";
+"TranscriptionView.retranscribeConfirmationMessage" = "文字起こしを再実行しますか？現在の文字起こし結果は消去されます。";
+"TranscriptionView.retranscribeConfirmationButton" = "再実行";
+"TranscriptionView.saveAsTextFile" = "テキストファイルとして保存";
+"TranscriptionView.exportErrorMessageFormat" = "ファイルの保存に失敗しました: %@";
+"TranscriptionView.reset" = "リセット";
+"TranscriptionView.resetConfirmationMessage" = "ファイルと文字起こしをリセットしますか？";
+"TranscriptionView.resetConfirmationButton" = "リセット";
+"TranscriptionView.showCurrentLocation" = "現在の場所を表示";
+"TranscriptionView.noTranscription" = "文字起こしがありません";
+"TranscriptionView.startTranscription" = "文字起こしを開始";
+"TranscriptionView.timeFormat" = "%d分%02d秒";
+"TranscriptionView.dragAndDropMediaFile" = "音声・動画ファイルをドラッグ＆ドロップ";
+"TranscriptionView.or" = "または";
+"TranscriptionView.dropMediaFileHere" = "ここに音声・動画ファイルをドロップ";
+"TranscriptionView.fileSelectionErrorFormat" = "ファイル選択エラー: %@";
+"TranscriptionView.untitled" = "名称未設定";
+"TranscriptionView.searchPlaceholder" = "文字起こしを検索";
+"TranscriptionView.find" = "検索";
+"TranscriptionView.noSearchResults" = "検索結果が見つかりませんでした。";
+
+/* WhisperError */
+"WhisperError.fileNotFound" = "ファイルが見つかりませんでした";
+"WhisperError.unsupportedFormat" = "サポートされていないファイル形式です";
+"WhisperError.failedToInitialize" = "Whisperの初期化に失敗しました";
+"WhisperError.uninitialized" = "Whisperが初期化されていません";
+"WhisperError.transcriptionFailed" = "文字起こし処理に失敗しました";
+"WhisperError.unsupportedModel" = "サポートされていないモデル名です";
+"WhisperError.audioFileLoadFailed" = "ファイルの読み込みに失敗しました";
+"WhisperError.audioExportFailed" = "動画ファイルから音声の書き出しに失敗しました";
+
+/* WhisperInitializeStatus */
+"WhisperInitializeStatus.uninitialized" = "WhisperKitが初期化されていません";
+"WhisperInitializeStatus.checkingModel" = "モデルを確認中...";
+"WhisperInitializeStatus.downloadingModelFormat" = "モデルをダウンロード中... %@%%";
+"WhisperInitializeStatus.loadingModel" = "モデルを読み込み中...";
+"WhisperInitializeStatus.ready" = "WhisperKitが準備完了";

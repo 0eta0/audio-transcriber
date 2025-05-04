@@ -5,6 +5,8 @@ struct AudioTranscriberApp: App {
 
     // MARK: Properties
 
+    @Environment(\.openWindow) var openWindow
+
     private var dependency = Dependency()
 
     // MARK: Body
@@ -17,5 +19,28 @@ struct AudioTranscriberApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
+        .commands {
+            CommandGroup(after: .textEditing) {
+                Divider()
+                Button(L10n.TranscriptionView.find) {
+                    // Post notification to focus search field
+                    NotificationCenter.default.post(name: .focusSearchField, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: .command)
+            }
+            CommandGroup(replacing: .help) {
+                Link(L10n.Toolbar.Help.help, destination: URL(string: "https://github.com/0eta0/audio-transcriber")!)
+                    .keyboardShortcut("?")
+                Divider()
+                Button(L10n.Toolbar.Help.acknowledgements) {
+                    openWindow(id: "acknowledgements")
+                }
+            }
+        }
+        
+        WindowGroup(id: "acknowledgements") {
+            AcknowledgementsView()
+                .frame(minWidth: 400, minHeight: 400)
+        }
     }
 }

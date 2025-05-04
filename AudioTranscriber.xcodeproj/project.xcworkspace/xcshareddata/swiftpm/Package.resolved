@@ -1,13 +1,22 @@
 {
-  "originHash" : "e843284a09b9d7fb8d0032fe1a3fd1fbd38f28ea54d42a39ccbe396af16d225d",
+  "originHash" : "6f5d2ed9a012cd5252fa210619afb11270c2e410d70ff578c48a515306b00723",
   "pins" : [
     {
       "identity" : "jinja",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/johnmai-dev/Jinja",
       "state" : {
-        "revision" : "bbddb92fc51ae420b87300298370fd1dfc308f73",
-        "version" : "1.1.1"
+        "revision" : "31c4dd39bcdc07eaa42a384bdc88ea599022b800",
+        "version" : "1.1.2"
+      }
+    },
+    {
+      "identity" : "networkimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/NetworkImage",
+      "state" : {
+        "revision" : "2849f5323265386e200484b0d0f896e73c3411b9",
+        "version" : "6.0.1"
       }
     },
     {
@@ -20,12 +29,30 @@
       }
     },
     {
+      "identity" : "swift-cmark",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-cmark",
+      "state" : {
+        "revision" : "b022b08312decdc46585e0b3440d97f6f22ef703",
+        "version" : "0.6.0"
+      }
+    },
+    {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections.git",
       "state" : {
         "revision" : "671108c96644956dddcd89dd59c203dcdb36cec7",
         "version" : "1.1.4"
+      }
+    },
+    {
+      "identity" : "swift-markdown-ui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/swift-markdown-ui",
+      "state" : {
+        "revision" : "5f613358148239d0292c0cef674a3c2314737f9e",
+        "version" : "2.4.1"
       }
     },
     {
@@ -42,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/argmaxinc/WhisperKit",
       "state" : {
-        "branch" : "main",
-        "revision" : "ca495968b471cdf9b09c4c34ecf1ba509e31aaec"
+        "revision" : "6a509d6181da1f71517159425d6ec9d94d424f55",
+        "version" : "0.12.0"
       }
     }
   ],
