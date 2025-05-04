@@ -28,7 +28,9 @@ struct AudioTranscriberApp: App {
                 }
                 .keyboardShortcut("f", modifiers: .command)
             }
-            CommandGroup(after: .help) {
+            CommandGroup(replacing: .help) {
+                Link(L10n.Toolbar.Help.help, destination: URL(string: "https://github.com/0eta0/audio-transcriber")!)
+                    .keyboardShortcut("?")
                 Divider()
                 Button(L10n.Toolbar.Help.acknowledgements) {
                     openWindow(id: "acknowledgements")

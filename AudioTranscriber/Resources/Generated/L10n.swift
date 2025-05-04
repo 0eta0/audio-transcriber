@@ -51,8 +51,10 @@ internal enum L10n {
   }
   internal enum Toolbar {
     internal enum Help {
-      /// Toolbar
+      /// Acknowledgements
       internal static let acknowledgements = L10n.tr("Localizable", "Toolbar.help.acknowledgements", fallback: "Acknowledgements")
+      /// Toolbar
+      internal static let help = L10n.tr("Localizable", "Toolbar.help.help", fallback: "AudioTranscriber Help")
     }
   }
   internal enum TranscriptionView {
