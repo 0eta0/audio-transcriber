@@ -1,10 +1,11 @@
 import SwiftUI
 
-
 @main
 struct AudioTranscriberApp: App {
 
     // MARK: Properties
+
+    @Environment(\.openWindow) var openWindow
 
     private var dependency = Dependency()
 
@@ -27,6 +28,17 @@ struct AudioTranscriberApp: App {
                 }
                 .keyboardShortcut("f", modifiers: .command)
             }
+            CommandGroup(after: .help) {
+                Divider()
+                Button(L10n.Toolbar.Help.acknowledgements) {
+                    openWindow(id: "acknowledgements")
+                }
+            }
+        }
+        
+        WindowGroup(id: "acknowledgements") {
+            AcknowledgementsView()
+                .frame(minWidth: 400, minHeight: 400)
         }
     }
 }

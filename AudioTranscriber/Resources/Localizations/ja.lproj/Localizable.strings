@@ -1,3 +1,9 @@
+/* Toolbar */
+"Toolbar.help.acknowledgements" = "ライセンス情報";
+
+/* Acknowledgements */
+"Acknowledgements.empty" = "マークダウンが見つかりませんでした";
+
 /* Common */
 "Common.retryButton" = "再試行";
 "Common.backToAppButton" = "アプリに戻る";

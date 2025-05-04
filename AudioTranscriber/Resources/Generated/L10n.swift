@@ -10,6 +10,10 @@ import Foundation
 // swiftlint:disable explicit_type_interface function_parameter_count identifier_name line_length
 // swiftlint:disable nesting type_body_length type_name vertical_whitespace_opening_braces
 internal enum L10n {
+  internal enum Acknowledgements {
+    /// Acknowledgements
+    internal static let empty = L10n.tr("Localizable", "Acknowledgements.empty", fallback: "No markdown found")
+  }
   internal enum Common {
     /// Back to App
     internal static let backToAppButton = L10n.tr("Localizable", "Common.backToAppButton", fallback: "Back to App")
@@ -43,6 +47,12 @@ internal enum L10n {
     /// SetupViewModel
     internal static func changingDescriptionFormat(_ p1: Any) -> String {
       return L10n.tr("Localizable", "SetupViewModel.changingDescriptionFormat", String(describing: p1), fallback: "Changing to %@...")
+    }
+  }
+  internal enum Toolbar {
+    internal enum Help {
+      /// Toolbar
+      internal static let acknowledgements = L10n.tr("Localizable", "Toolbar.help.acknowledgements", fallback: "Acknowledgements")
     }
   }
   internal enum TranscriptionView {

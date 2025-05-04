@@ -1,3 +1,9 @@
+/* Toolbar */
+"Toolbar.help.acknowledgements" = "Acknowledgements";
+
+/* Acknowledgements */
+"Acknowledgements.empty" = "No markdown found";
+
 /* Common */
 "Common.retryButton" = "Retry";
 "Common.backToAppButton" = "Back to App";
