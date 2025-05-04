@@ -8,6 +8,7 @@ protocol WhisperManagerType {
     func supportedModel() -> [String]
     func currentModel() -> String
     func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment]
+    func cancelTranscribeIfNeeded()
 }
 
 final class WhisperManager: @unchecked Sendable, WhisperManagerType {
@@ -18,6 +19,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
     private let language = "ja"
     private let modelRepo = "argmaxinc/whisperkit-coreml"
     private var currentModelName: String = "openai_whisper-base"
+    private var transcribeTask: Task<[TranscriptSegment], Error>?
 
     // MARK: Public Functions
 
@@ -110,12 +112,21 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         // Get audio file duration
         let audioDuration = try await getAudioDuration(for: url)
         // Execute transcription process
-        return try await transcribeAudio(
-            whisperKit: whisperKit,
-            url: url,
-            audioDuration: audioDuration,
-            progressCallback: progressCallback
-        )
+        let task = Task(priority: .userInitiated) {
+            try await transcribeAudio(
+               whisperKit: whisperKit,
+               url: url,
+               audioDuration: audioDuration,
+               progressCallback: progressCallback
+           )
+        }
+        transcribeTask = task
+        return try await task.value
+    }
+    
+    func cancelTranscribeIfNeeded() {
+        transcribeTask?.cancel()
+        whisperKit?.clearState()
     }
 
     // MARK: Private Functions

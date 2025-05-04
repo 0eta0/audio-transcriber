@@ -8,6 +8,7 @@
 "SetupView.title" = "音声文字起こしモデルの変更";
 "SetupView.description" = "文字起こしに使用するWhisperモデルを変更できます。\nモデルによって精度と処理速度が異なります。";
 "SetupView.currentModelLabel" = "現在のモデル: %@";
+"SetupView.note" = "tiny, baseなどのモデルは音声認識精度が低いですが、文字起こしの速度が速いです。";
 "SetupView.changeModelButton" = "モデルを変更";
 
 /* SetupViewModel */

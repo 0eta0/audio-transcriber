@@ -561,6 +561,7 @@ private struct TranscriptionContentView<ViewModel: TranscriptionViewModelType>: 
             }
             .onChange(of: viewModel.currentSegmentID) { _, id in
                 if viewModel.autoScrollEnabled {
+                    // Prevent disabling auto-scroll when scroll occur using scfollView.scrollTo
                     viewModel.autoScrollEnabled(with: 1.0)
                     // Only scroll if the current segment is visible in the filtered list
                     if viewModel.filteredSegments.contains(where: { $0.id == id }) {

@@ -8,6 +8,7 @@
 "SetupView.title" = "Change Audio Transcription Model";
 "SetupView.description" = "You can change the Whisper model used for transcription.\nAccuracy and processing speed vary depending on the model.";
 "SetupView.currentModelLabel" = "Current Model: %@";
+"SetupView.note" = "Models like tiny and base have lower transcription accuracy but faster transcription speed.";
 "SetupView.changeModelButton" = "Change Model";
 
 /* SetupViewModel */

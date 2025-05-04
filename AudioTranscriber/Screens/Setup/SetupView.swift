@@ -87,6 +87,8 @@ private struct SelectionView: View {
         VStack(spacing: 16) {
             Text(L10n.SetupView.currentModelLabel(currentModel))
                 .padding(.top, 5)
+            
+            Text(L10n.SetupView.note)
 
             Picker("", selection: $selectedModel) {
                 ForEach(supportedModels, id: \.self) { model in

@@ -30,6 +30,8 @@ internal enum L10n {
     /// You can change the Whisper model used for transcription.
     /// Accuracy and processing speed vary depending on the model.
     internal static let description = L10n.tr("Localizable", "SetupView.description", fallback: "You can change the Whisper model used for transcription.\nAccuracy and processing speed vary depending on the model.")
+    /// Models like tiny and base have lower transcription accuracy but faster transcription speed.
+    internal static let note = L10n.tr("Localizable", "SetupView.note", fallback: "Models like tiny and base have lower transcription accuracy but faster transcription speed.")
     /// SetupView
     internal static let title = L10n.tr("Localizable", "SetupView.title", fallback: "Change Audio Transcription Model")
   }
