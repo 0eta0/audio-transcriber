@@ -1,6 +1,6 @@
 # AudioTranscriber
 
-[Download here](https://github.com/0eta0/audio-transcriber/releases/download/v1.0.0/audio-transcriber.macos.zip)
+[Download here](https://github.com/0eta0/audio-transcriber/releases/download/v1.1.0/AudioTranscriber.macos.zip)
 
 This is a locally running audio transcription application. Select audio or video files for transcription, and the currently playing part is highlighted in real-time.
 
