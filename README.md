@@ -20,10 +20,6 @@ This is a locally running audio transcription application. Select audio or video
 - Save transcribed text feature
 - Selection of transcription models based on needs
 
-## Technical Specifications
-
-- Local speech recognition using mlx-whisper
-
 ## Requirements
 
 - macOS 14.6 or later
