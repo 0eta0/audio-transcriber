@@ -168,7 +168,8 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             let decodeOptions = DecodingOptions(
                 task: .transcribe,
                 language: language,
-                temperature: 0.0
+                temperature: 0.0,
+                chunkingStrategy: .vad
             )
             // Execute transcription - using audioPath
             let results = try await whisperKit.transcribe(
@@ -180,22 +181,21 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
                     return true
             })
             // Generate TranscriptSegment from WhisperKit results
-            var segments: [TranscriptSegment] = []
-            guard let result = results.first else {
-                return []
+            var transcripts = [TranscriptSegment]()
+            let segments = results.reduce([TranscriptionSegment]()) { total, new in
+                total + new.segments
             }
-
-            for segment in result.segments {
+            for segment in segments {
                 let cleanedText = removeTagsFromText(segment.text)
                 // If the same text continues, update the previous segment
-                if let last = segments.last, last.text == cleanedText {
+                if let last = transcripts.last, last.text == cleanedText {
                     let ts = TranscriptSegment(
-                        text: cleanedText.trimmingCharacters(in: .whitespacesAndNewlines),
+                        text: cleanedText,
                         startTime: last.startTime,
                         endTime: TimeInterval(segment.end)
                     )
-                    _ = segments.popLast()
-                    segments.append(ts)
+                    _ = transcripts.popLast()
+                    transcripts.append(ts)
                     continue
                 }
                 let ts = TranscriptSegment(
@@ -203,9 +203,9 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
                     startTime: TimeInterval(segment.start),
                     endTime: TimeInterval(segment.end)
                 )
-                segments.append(ts)
+                transcripts.append(ts)
             }
-            return segments
+            return transcripts
         } catch {
             throw WhisperError.transcriptionFailed
         }
@@ -218,9 +218,9 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
         do {
             let regex = try NSRegularExpression(pattern: pattern, options: [])
             let range = NSRange(location: 0, length: text.utf16.count)
-            return regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "")
+            return regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "").trimmingCharacters(in: .whitespacesAndNewlines)
         } catch {
-            return text
+            return text.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
 }
