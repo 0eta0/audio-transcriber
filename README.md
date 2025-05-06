@@ -56,8 +56,8 @@ This generates the license file.
 make license
 ```
 
-## License
+## Acknowledgements
 
-This app uses the following external licenses.
+This app uses the following external libraries.
 
-[License Information](./AudioTranscriber/Resources/licenses.md)
+[License](./AudioTranscriber/Resources/licenses.md)
