@@ -168,8 +168,9 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             // Transcription settings
             let decodeOptions = DecodingOptions(
                 task: .transcribe,
-                language: language.rawValue,
+                language: language != .auto ? language.rawValue : nil,
                 temperature: 0.0,
+                detectLanguage: language == .auto,
                 chunkingStrategy: .vad
             )
             // Execute transcription - using audioPath
