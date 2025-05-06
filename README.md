@@ -1,6 +1,6 @@
 # AudioTranscriber
 
-[Download here](https://github.com/0eta0/audio-transcriber/releases/download/v1.1.0/AudioTranscriber.macos.zip)
+[Download here](https://github.com/0eta0/audio-transcriber/releases/download/v1.1.1/AudioTranscriber.macos.zip)
 
 This is a locally running audio transcription application. Select audio or video files for transcription, and the currently playing part is highlighted in real-time.
 
@@ -11,8 +11,8 @@ This is a locally running audio transcription application. Select audio or video
 
 ## Features
 
-- Load audio files (MP3, WAV, M4A, FLAC, MP4, MOV, etc.)
-- Local transcription using OpenAI's Whisper-based models
+- Load a media file (MP3, WAV, M4A, FLAC, MP4, MOV, etc.)
+- Local transcription using Whisper-based models
 - Controls for video and audio playback, pause, seek, etc.
 - Video display within the video window
 - Highlighting of the currently playing text segment
