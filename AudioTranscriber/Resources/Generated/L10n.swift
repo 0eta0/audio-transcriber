@@ -23,6 +23,10 @@ internal enum L10n {
     internal static let okButton = L10n.tr("Localizable", "Common.okButton", fallback: "OK")
     /// Common
     internal static let retryButton = L10n.tr("Localizable", "Common.retryButton", fallback: "Retry")
+    internal enum SupportLanguage {
+      /// Auto Detect
+      internal static let auto = L10n.tr("Localizable", "Common.SupportLanguage.Auto", fallback: "Auto Detect")
+    }
   }
   internal enum SetupView {
     /// Change Model
@@ -92,6 +96,8 @@ internal enum L10n {
     }
     /// Find
     internal static let find = L10n.tr("Localizable", "TranscriptionView.find", fallback: "Find")
+    /// When using automatic detection, transcription may take longer. If you know the primary language, it’s recommended to specify it.
+    internal static let languageNotice = L10n.tr("Localizable", "TranscriptionView.languageNotice", fallback: "When using automatic detection, transcription may take longer. If you know the primary language, it’s recommended to specify it.")
     /// No results found for your search.
     internal static let noSearchResults = L10n.tr("Localizable", "TranscriptionView.noSearchResults", fallback: "No results found for your search.")
     /// No transcription available

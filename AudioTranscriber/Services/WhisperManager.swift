@@ -7,7 +7,7 @@ protocol WhisperManagerType {
     func setupWhisperIfNeeded(modelName: String, progressCallback: ((WhisperInitializeStatus) -> Void)?) async throws
     func supportedModel() -> [String]
     func currentModel() -> String
-    func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment]
+    func transcribe(url: URL, language: SupportLanguage, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment]
     func cancelTranscribeIfNeeded()
 }
 
@@ -16,7 +16,6 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
     // MARK: Properties
 
     private var whisperKit: WhisperKit?
-    private let language = "ja"
     private let modelRepo = "argmaxinc/whisperkit-coreml"
     private var currentModelName: String = "openai_whisper-base"
     private var transcribeTask: Task<[TranscriptSegment], Error>?
@@ -76,7 +75,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
     }
 
     // Transcribe audio file
-    func transcribe(url: URL, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment] {
+    func transcribe(url: URL, language: SupportLanguage, progressCallback: @escaping (TimeInterval) -> Void) async throws -> [TranscriptSegment] {
         try await setupWhisperIfNeeded(modelName: currentModelName)
         guard let whisperKit = whisperKit else {
             throw WhisperError.uninitialized
@@ -116,6 +115,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             try await transcribeAudio(
                whisperKit: whisperKit,
                url: url,
+               language: language,
                audioDuration: audioDuration,
                progressCallback: progressCallback
            )
@@ -160,6 +160,7 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
     private func transcribeAudio(
         whisperKit: WhisperKit,
         url: URL,
+        language: SupportLanguage,
         audioDuration: TimeInterval,
         progressCallback: @escaping (TimeInterval) -> Void
     ) async throws -> [TranscriptSegment]{
@@ -167,8 +168,9 @@ final class WhisperManager: @unchecked Sendable, WhisperManagerType {
             // Transcription settings
             let decodeOptions = DecodingOptions(
                 task: .transcribe,
-                language: language,
+                language: language != .auto ? language.rawValue : nil,
                 temperature: 0.0,
+                detectLanguage: language == .auto,
                 chunkingStrategy: .vad
             )
             // Execute transcription - using audioPath

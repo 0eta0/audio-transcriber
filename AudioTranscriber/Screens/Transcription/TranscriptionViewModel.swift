@@ -25,6 +25,7 @@ protocol TranscriptionViewModelType: ObservableObject, Sendable {
     var transcribingProgress: TimeInterval { get set }
     var currentSegmentID: UUID { get set }
     var error: WhisperError? { get set }
+    var language: SupportLanguage { get set }
 
     var currentModelName: String { get }
     var supportedModels: [String] { get }
@@ -73,6 +74,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
     @Published var transcribingProgress: TimeInterval = .zero
     @Published var currentSegmentID: UUID = UUID()
     @Published var error: WhisperError?
+    @Published var language: SupportLanguage = SupportLanguage.default
 
     // UI
     @Published var autoScrollEnabled: Bool = false
@@ -231,7 +233,7 @@ final class TranscriptionViewModel: TranscriptionViewModelType {
         Task { @MainActor in
             isTranscribing = true
             do {
-                let result = try await self.whisperManager?.transcribe(url: mediaFileURL) { [weak self] progress in
+                let result = try await self.whisperManager?.transcribe(url: mediaFileURL, language: language) { [weak self] progress in
                     guard let self = self else { return }
                     Task { @MainActor in
                         self.transcribingProgress = progress

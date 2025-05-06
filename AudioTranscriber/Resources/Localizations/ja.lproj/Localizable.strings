@@ -10,6 +10,7 @@
 "Common.backToAppButton" = "アプリに戻る";
 "Common.cancelButton" = "キャンセル";
 "Common.okButton" = "OK";
+"Common.SupportLanguage.Auto" = "自動検出";
 
 /* SetupView */
 "SetupView.title" = "音声文字起こしモデルの変更";
@@ -25,6 +26,7 @@
 /* TranscriptionView */
 "TranscriptionView.selectMediaFile" = "音声・動画ファイルを選択";
 "TranscriptionView.dropMediaFile" = "ここに音声・動画ファイルをドロップ";
+"TranscriptionView.languageNotice" = "自動検出の場合、時間がよりかかってしまう場合があります。主な言語が分かっている場合は指定するのがおすすめです。";
 "TranscriptionView.transcribe" = "文字起こし";
 "TranscriptionView.transcribing" = "文字起こし中...";
 "TranscriptionView.errorTitle" = "エラー";

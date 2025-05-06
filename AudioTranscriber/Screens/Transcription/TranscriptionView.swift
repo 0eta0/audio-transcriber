@@ -622,6 +622,22 @@ private struct EmptyTranscriptionView<ViewModel: TranscriptionViewModelType>: Vi
                     .foregroundColor(.secondary)
                 
                 if viewModel.isFileLoaded, let _ = viewModel.mediaFile {
+                    Divider()
+                        .frame(width: 320)
+                        .padding(.top, 20)
+
+                    Text(L10n.TranscriptionView.languageNotice)
+                        .frame(width: 320)
+                        .padding(.top, 20)
+
+                    Picker("", selection: $viewModel.language) {
+                        ForEach(SupportLanguage.allCases, id: \.self) { lang in
+                            Text(lang.nativeName).tag(lang)
+                        }
+                    }
+                    .frame(width: 120)
+                    .padding(.top, 8)
+
                     Button(L10n.TranscriptionView.startTranscription) {
                         viewModel.transcribeAudio()
                     }

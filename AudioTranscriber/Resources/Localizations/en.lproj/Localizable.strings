@@ -10,6 +10,7 @@
 "Common.backToAppButton" = "Back to App";
 "Common.cancelButton" = "Cancel";
 "Common.okButton" = "OK";
+"Common.SupportLanguage.Auto" = "Auto Detect";
 
 /* SetupView */
 "SetupView.title" = "Change Audio Transcription Model";
@@ -25,6 +26,7 @@
 /* TranscriptionView */
 "TranscriptionView.selectMediaFile" = "Select Media File";
 "TranscriptionView.dropMediaFile" = "Drop audio media here";
+"TranscriptionView.languageNotice" = "When using automatic detection, transcription may take longer. If you know the primary language, it’s recommended to specify it.";
 "TranscriptionView.transcribe" = "Transcribe";
 "TranscriptionView.transcribing" = "Transcribing...";
 "TranscriptionView.errorTitle" = "Error";
